@@ -272,23 +272,27 @@ int  PF_CloseFile	(int fd) {
 
 	/* Check if the file was ever opened */
 	if (pft[fd].valid == FALSE){
+		printf("filenotopen");
 		return PFE_FILENOTOPEN;
 	}
 
 	/* using BF_FlushBuf() to release all the buffer pages, writing dirty pages */
 	if (BF_FlushBuf(fd) != BFE_OK) {
+		printf("pagefree");
 		return PFE_PAGEFREE;
 	}
 
 	/* Write the file header back to file if ever changed */
 	if (pft[fd].hdrchanged == TRUE){
 		if (pwrite(pft[fd].unixfd, &pft[fd].hdr, sizeof(PFhdr_str), FILE_BEGINNING)!= sizeof(PFhdr_str)){
+		printf("hdrwrite");
 			return PFE_HDRWRITE;
 		}
 	}
 
 	/* close the file using close(), freeing the file table entry */
 	if (close(pft[fd].unixfd) != CLOSE_SUCCESS){
+		printf("unix");
 		return PFE_UNIX; /*  when close() fails and an error code is returned */
 	}
 	pft[fd].valid = FALSE;

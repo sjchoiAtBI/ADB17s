@@ -66,15 +66,18 @@ void amtest1()
       exit(1);
    }
 
+	printf("AM start\n");
    if (AM_CreateIndex(FILE1, 1, STRING_TYPE, STRSIZE, FALSE) != AME_OK) {
       AM_PrintError("Problem creating");
       exit(1);
    }
+	printf("createindex done\n");
    if ((am_fd = AM_OpenIndex(FILE1,1)) < 0) {
       AM_PrintError("Problem opening");
       exit(1);
    }
 
+	printf("openindex done\n");
    /* Inserting value in the HF file and the B+ Tree */
       value = 10;
       while (value < 100)
@@ -94,6 +97,7 @@ void amtest1()
          }
 
          /* Inserting the record in the B+ Tree */
+		 printf("inserting %s\n", string_val);
          if (AM_InsertEntry(am_fd, (char *)&string_val, recid) != AME_OK) {
              AM_PrintError("Problem Inserting rec");
              exit(1);

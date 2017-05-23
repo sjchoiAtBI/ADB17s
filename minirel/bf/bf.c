@@ -238,12 +238,14 @@ int BF_FlushBuf(int fd) {
 			/* if 'Flushed_page' is pinned, return error message */
 			if (Flushed_page->count != 0) {
 				/* printf("BFE_PAGEFIXED %d\n", Flushed_page->count); */
+				printf("pagefixed");
 				return BFE_PAGEFIXED;
 			}
 
 			/* if 'Flushed_page' is dirty, write PFpage of it on the disk */
 			if (Flushed_page->dirty == TRUE) {
 				if (pwrite(Flushed_page->unixfd, Flushed_page->fpage.pagebuf, PAGE_SIZE, PFHDR_SIZE + PAGE_SIZE * Flushed_page->pageNum) != PAGE_SIZE) {
+					printf("allocbuf: pwrite");
 					return BFE_UNIX;
 				}
 			}
