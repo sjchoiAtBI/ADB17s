@@ -1,0 +1,67 @@
+***** start amtest1 *****
+***** end amtest1 *****
+***** Start amtest2 *****
+***** start amtest1 *****
+***** end amtest1 *****
+the retrieved value is entry52
+the retrieved value is entry54
+the retrieved value is entry56
+the retrieved value is entry58
+the retrieved value is entry60
+the retrieved value is entry62
+the retrieved value is entry64
+the retrieved value is entry66
+the retrieved value is entry68
+the retrieved value is entry70
+the retrieved value is entry72
+the retrieved value is entry74
+the retrieved value is entry76
+the retrieved value is entry78
+the retrieved value is entry80
+the retrieved value is entry82
+the retrieved value is entry84
+the retrieved value is entry86
+the retrieved value is entry88
+the retrieved value is entry90
+the retrieved value is entry92
+the retrieved value is entry94
+the retrieved value is entry96
+the retrieved value is entry98
+***** end amtest2 *****
+***** Start amtest3 *****
+***** start amtest1 *****
+***** end amtest1 *****
+the retrieved value is entry52
+DELETING entry entry52
+the retrieved value is entry54
+DELETING entry entry54
+the retrieved value is entry56
+DELETING entry entry56
+the retrieved value is entry58
+DELETING entry entry58
+the retrieved value is entry60
+DELETING entry entry60
+the retrieved value is entry62
+DELETING entry entry62
+the retrieved value is entry64
+DELETING entry entry64
+the retrieved value is entry66
+DELETING entry entry66
+the retrieved value is entry68
+DELETING entry entry68
+the retrieved value is entry70
+the retrieved value is entry72
+the retrieved value is entry74
+the retrieved value is entry76
+the retrieved value is entry78
+the retrieved value is entry80
+the retrieved value is entry82
+the retrieved value is entry84
+the retrieved value is entry86
+the retrieved value is entry88
+the retrieved value is entry90
+the retrieved value is entry92
+the retrieved value is entry94
+the retrieved value is entry96
+the retrieved value is entry98
+***** end amtest3 *****

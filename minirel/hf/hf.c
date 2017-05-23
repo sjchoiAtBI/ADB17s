@@ -501,6 +501,10 @@ int HF_CloseFileScan(int HFsd) {
     return HFE_OK;
 }
 
+void HF_PrintError(char *errString) {
+    printf("HF_PrintError: %s\n", errString);
+}
+
 /* Test where record position is valid.
     - HFfd: fd of HF layer.
     - recid: record position to test.
