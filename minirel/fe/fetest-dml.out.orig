@@ -1,0 +1,442 @@
+Removing database testdb. Hold on......
+cleanup done!
+>>> Database testdb has been created
+Print the relation catalog
+Relation relcat:
++--------------+--------------+--------------+--------------+--------------+
+| relname      | relwid       | attrcnt      | indexcnt     | primattr     |
++--------------+--------------+--------------+--------------+--------------+
+| relcat       |           36 |            5 |            0 | relname      |
+| attrcat      |           44 |            7 |            0 | relname      |
++--------------+--------------+--------------+--------------+--------------+
+Print the attribute catalog
+Relation attrcat:
++--------------+--------------+--------------+--------------+--------------+--------------+--------------+
+| relname      | attrname     | offset       | length       | type         | indexed      | attrno       |
++--------------+--------------+--------------+--------------+--------------+--------------+--------------+
+| relcat       | relname      |            0 |           12 | string       | no           |            0 |
+| relcat       | relwid       |           12 |            4 | integer      | no           |            1 |
+| relcat       | attrcnt      |           16 |            4 | integer      | no           |            2 |
+| relcat       | indexcnt     |           20 |            4 | integer      | no           |            3 |
+| relcat       | primattr     |           24 |           12 | string       | no           |            4 |
+| attrcat      | relname      |            0 |           12 | string       | no           |            0 |
+| attrcat      | attrname     |           12 |           12 | string       | no           |            1 |
+| attrcat      | offset       |           24 |            4 | integer      | no           |            2 |
+| attrcat      | length       |           28 |            4 | integer      | no           |            3 |
+| attrcat      | type         |           32 |            4 | integer      | no           |            4 |
+| attrcat      | indexed      |           36 |            4 | boolean      | no           |            5 |
+| attrcat      | attrno       |           40 |            4 | integer      | no           |            6 |
++--------------+--------------+--------------+--------------+--------------+--------------+--------------+
+HelpTable with relcat
+Relation  relcat:
+	Prim Attr:  relname	No of Attrs:  5	Tuple width:  36	No of Indices:  0
+Attributes:
++--------------+--------------+--------------+--------------+--------------+--------------+
+| attrname     | offset       | length       | type         | indexed      | attrno       |
++--------------+--------------+--------------+--------------+--------------+--------------+
+| relname      |            0 |           12 | string       | no           |            0 |
+| relwid       |           12 |            4 | integer      | no           |            1 |
+| attrcnt      |           16 |            4 | integer      | no           |            2 |
+| indexcnt     |           20 |            4 | integer      | no           |            3 |
+| primattr     |           24 |           12 | string       | no           |            4 |
++--------------+--------------+--------------+--------------+--------------+--------------+
+HelpTable with attrcat
+Relation  attrcat:
+	Prim Attr:  relname	No of Attrs:  7	Tuple width:  44	No of Indices:  0
+Attributes:
++--------------+--------------+--------------+--------------+--------------+--------------+
+| attrname     | offset       | length       | type         | indexed      | attrno       |
++--------------+--------------+--------------+--------------+--------------+--------------+
+| relname      |            0 |           12 | string       | no           |            0 |
+| attrname     |           12 |           12 | string       | no           |            1 |
+| offset       |           24 |            4 | integer      | no           |            2 |
+| length       |           28 |            4 | integer      | no           |            3 |
+| type         |           32 |            4 | integer      | no           |            4 |
+| indexed      |           36 |            4 | boolean      | no           |            5 |
+| attrno       |           40 |            4 | integer      | no           |            6 |
++--------------+--------------+--------------+--------------+--------------+--------------+
+>>> Creating tables for students and professors ...
+Start create_student ...
+End create_student ...
+Start create_professor ...
+End create_professor ...
+Print the relation catalog
+Relation relcat:
++--------------+--------------+--------------+--------------+--------------+
+| relname      | relwid       | attrcnt      | indexcnt     | primattr     |
++--------------+--------------+--------------+--------------+--------------+
+| relcat       |           36 |            5 |            0 | relname      |
+| attrcat      |           44 |            7 |            0 | relname      |
+| student.sid  |           32 |            5 |            0 | sid          |
+| prof.pid     |           24 |            3 |            0 | pid          |
++--------------+--------------+--------------+--------------+--------------+
+Print the attribute catalog
+Relation attrcat:
++--------------+--------------+--------------+--------------+--------------+--------------+--------------+
+| relname      | attrname     | offset       | length       | type         | indexed      | attrno       |
++--------------+--------------+--------------+--------------+--------------+--------------+--------------+
+| relcat       | relname      |            0 |           12 | string       | no           |            0 |
+| relcat       | relwid       |           12 |            4 | integer      | no           |            1 |
+| relcat       | attrcnt      |           16 |            4 | integer      | no           |            2 |
+| relcat       | indexcnt     |           20 |            4 | integer      | no           |            3 |
+| relcat       | primattr     |           24 |           12 | string       | no           |            4 |
+| attrcat      | relname      |            0 |           12 | string       | no           |            0 |
+| attrcat      | attrname     |           12 |           12 | string       | no           |            1 |
+| attrcat      | offset       |           24 |            4 | integer      | no           |            2 |
+| attrcat      | length       |           28 |            4 | integer      | no           |            3 |
+| attrcat      | type         |           32 |            4 | integer      | no           |            4 |
+| attrcat      | indexed      |           36 |            4 | boolean      | no           |            5 |
+| attrcat      | attrno       |           40 |            4 | integer      | no           |            6 |
+| student.sid  | sid          |            0 |            4 | integer      | no           |            0 |
+| student.sid  | sname        |            4 |           16 | string       | no           |            1 |
+| student.sid  | gpa          |           20 |            4 | real         | no           |            2 |
+| student.sid  | age          |           24 |            4 | integer      | no           |            3 |
+| student.sid  | advisor      |           28 |            4 | integer      | no           |            4 |
+| prof.pid     | pid          |            0 |            4 | integer      | no           |            0 |
+| prof.pid     | pname        |            4 |           16 | string       | no           |            1 |
+| prof.pid     | office       |           20 |            4 | integer      | no           |            2 |
++--------------+--------------+--------------+--------------+--------------+--------------+--------------+
+HelpTable with relcat
+Relation  relcat:
+	Prim Attr:  relname	No of Attrs:  5	Tuple width:  36	No of Indices:  0
+Attributes:
++--------------+--------------+--------------+--------------+--------------+--------------+
+| attrname     | offset       | length       | type         | indexed      | attrno       |
++--------------+--------------+--------------+--------------+--------------+--------------+
+| relname      |            0 |           12 | string       | no           |            0 |
+| relwid       |           12 |            4 | integer      | no           |            1 |
+| attrcnt      |           16 |            4 | integer      | no           |            2 |
+| indexcnt     |           20 |            4 | integer      | no           |            3 |
+| primattr     |           24 |           12 | string       | no           |            4 |
++--------------+--------------+--------------+--------------+--------------+--------------+
+HelpTable with attrcat
+Relation  attrcat:
+	Prim Attr:  relname	No of Attrs:  7	Tuple width:  44	No of Indices:  0
+Attributes:
++--------------+--------------+--------------+--------------+--------------+--------------+
+| attrname     | offset       | length       | type         | indexed      | attrno       |
++--------------+--------------+--------------+--------------+--------------+--------------+
+| relname      |            0 |           12 | string       | no           |            0 |
+| attrname     |           12 |           12 | string       | no           |            1 |
+| offset       |           24 |            4 | integer      | no           |            2 |
+| length       |           28 |            4 | integer      | no           |            3 |
+| type         |           32 |            4 | integer      | no           |            4 |
+| indexed      |           36 |            4 | boolean      | no           |            5 |
+| attrno       |           40 |            4 | integer      | no           |            6 |
++--------------+--------------+--------------+--------------+--------------+--------------+
+>>> Inserting students and professors ...
+Start insert_student ...
+End insert_student ...
+Start show_table(student.sid) ...
+Relation  student.sid:
+	Prim Attr:  sid	No of Attrs:  5	Tuple width:  32	No of Indices:  0
+Attributes:
++--------------+--------------+--------------+--------------+--------------+--------------+
+| attrname     | offset       | length       | type         | indexed      | attrno       |
++--------------+--------------+--------------+--------------+--------------+--------------+
+| sid          |            0 |            4 | integer      | no           |            0 |
+| sname        |            4 |           16 | string       | no           |            1 |
+| gpa          |           20 |            4 | real         | no           |            2 |
+| age          |           24 |            4 | integer      | no           |            3 |
+| advisor      |           28 |            4 | integer      | no           |            4 |
++--------------+--------------+--------------+--------------+--------------+--------------+
+Relation student.sid:
++--------------+------------------+--------------+--------------+--------------+
+| sid          | sname            | gpa          | age          | advisor      |
++--------------+------------------+--------------+--------------+--------------+
+|            0 | student0         |    83.178589 |           10 |            0 |
+|            1 | student1         |    39.043911 |           11 |            1 |
+|            2 | student2         |    77.526825 |           12 |            2 |
+|            3 | student3         |    79.045563 |           13 |            3 |
+|            4 | student4         |    90.253090 |           14 |            4 |
+|            5 | student5         |    19.557585 |           15 |            5 |
+|            6 | student6         |    33.187054 |           16 |            6 |
+|            7 | student7         |    76.054733 |           17 |            7 |
+|            8 | student8         |    27.499697 |           18 |            8 |
+|            9 | student9         |    54.843029 |           19 |            9 |
+|           10 | student10        |    47.262310 |           20 |            0 |
+|           11 | student11        |    62.258221 |           21 |            1 |
+|           12 | student12        |    36.113663 |           22 |            2 |
+|           13 | student13        |    50.826691 |           23 |            3 |
+|           14 | student14        |    94.270744 |           24 |            4 |
+|           15 | student15        |    90.703316 |           25 |            5 |
+|           16 | student16        |    62.935463 |           26 |            6 |
+|           17 | student17        |    71.012398 |           27 |            7 |
+|           18 | student18        |    14.018654 |           28 |            8 |
+|           19 | student19        |    60.089920 |           29 |            9 |
+|           20 | student20        |     1.613757 |           30 |            0 |
+|           21 | student21        |    24.045790 |           31 |            1 |
+|           22 | student22        |    13.585926 |           32 |            2 |
+|           23 | student23        |    79.613495 |           33 |            3 |
+|           24 | student24        |    15.511230 |           34 |            4 |
+|           25 | student25        |    39.693493 |           35 |            5 |
+|           26 | student26        |    12.849254 |           36 |            6 |
+|           27 | student27        |    10.772071 |           37 |            7 |
+|           28 | student28        |    98.893524 |           38 |            8 |
+|           29 | student29        |    21.607433 |           39 |            9 |
++--------------+------------------+--------------+--------------+--------------+
+End show_table(student.sid) ...
+Start insert_professor ...
+End insert_professor ...
+Start show_table(prof.pid) ...
+Relation  prof.pid:
+	Prim Attr:  pid	No of Attrs:  3	Tuple width:  24	No of Indices:  0
+Attributes:
++--------------+--------------+--------------+--------------+--------------+--------------+
+| attrname     | offset       | length       | type         | indexed      | attrno       |
++--------------+--------------+--------------+--------------+--------------+--------------+
+| pid          |            0 |            4 | integer      | no           |            0 |
+| pname        |            4 |           16 | string       | no           |            1 |
+| office       |           20 |            4 | integer      | no           |            2 |
++--------------+--------------+--------------+--------------+--------------+--------------+
+Relation prof.pid:
++--------------+------------------+--------------+
+| pid          | pname            | office       |
++--------------+------------------+--------------+
+|            0 | professor0       |          400 |
+|            1 | professor1       |          401 |
+|            2 | professor2       |          402 |
+|            3 | professor3       |          403 |
+|            4 | professor4       |          404 |
+|            5 | professor5       |          405 |
+|            6 | professor6       |          406 |
+|            7 | professor7       |          407 |
+|            8 | professor8       |          408 |
+|            9 | professor9       |          409 |
++--------------+------------------+--------------+
+End show_table(prof.pid) ...
+>>> Selecting / Joining students and professors ...
++------------------+--------------+--------------+--------------+
+| sname            | advisor      | gpa          | age          |
++------------------+--------------+--------------+--------------+
+| student0         |            0 |    83.178589 |           10 |
+| student2         |            2 |    77.526825 |           12 |
+| student3         |            3 |    79.045563 |           13 |
+| student4         |            4 |    90.253090 |           14 |
+| student7         |            7 |    76.054733 |           17 |
+| student14        |            4 |    94.270744 |           24 |
+| student15        |            5 |    90.703316 |           25 |
+| student23        |            3 |    79.613495 |           33 |
+| student28        |            8 |    98.893524 |           38 |
++------------------+--------------+--------------+--------------+
++------------------+--------------+
+| pname            | office       |
++------------------+--------------+
+| professor0       |          400 |
+| professor1       |          401 |
+| professor2       |          402 |
+| professor3       |          403 |
+| professor4       |          404 |
+| professor5       |          405 |
+| professor6       |          406 |
++------------------+--------------+
+Start joining students and professors ...
++--------------+------------------+--------------+--------------+------------------+
+| sid          | sname            | advisor      | pid          | pname            |
++--------------+------------------+--------------+--------------+------------------+
+|            0 | student0         |            0 |            0 | professor0       |
+|           10 | student10        |            0 |            0 | professor0       |
+|           20 | student20        |            0 |            0 | professor0       |
+|            1 | student1         |            1 |            1 | professor1       |
+|           11 | student11        |            1 |            1 | professor1       |
+|           21 | student21        |            1 |            1 | professor1       |
+|            2 | student2         |            2 |            2 | professor2       |
+|           12 | student12        |            2 |            2 | professor2       |
+|           22 | student22        |            2 |            2 | professor2       |
+|            3 | student3         |            3 |            3 | professor3       |
+|           13 | student13        |            3 |            3 | professor3       |
+|           23 | student23        |            3 |            3 | professor3       |
+|            4 | student4         |            4 |            4 | professor4       |
+|           14 | student14        |            4 |            4 | professor4       |
+|           24 | student24        |            4 |            4 | professor4       |
+|            5 | student5         |            5 |            5 | professor5       |
+|           15 | student15        |            5 |            5 | professor5       |
+|           25 | student25        |            5 |            5 | professor5       |
+|            6 | student6         |            6 |            6 | professor6       |
+|           16 | student16        |            6 |            6 | professor6       |
+|           26 | student26        |            6 |            6 | professor6       |
+|            7 | student7         |            7 |            7 | professor7       |
+|           17 | student17        |            7 |            7 | professor7       |
+|           27 | student27        |            7 |            7 | professor7       |
+|            8 | student8         |            8 |            8 | professor8       |
+|           18 | student18        |            8 |            8 | professor8       |
+|           28 | student28        |            8 |            8 | professor8       |
+|            9 | student9         |            9 |            9 | professor9       |
+|           19 | student19        |            9 |            9 | professor9       |
+|           29 | student29        |            9 |            9 | professor9       |
++--------------+------------------+--------------+--------------+------------------+
+End joining students and professors ...
+>>> Deleting students and professors ...
+Start deleting students ...
+End deleting students ...
+Start deleting professors ...
+End deleting professors ...
+Start show_table(student.sid) ...
+Relation  student.sid:
+	Prim Attr:  sid	No of Attrs:  5	Tuple width:  32	No of Indices:  0
+Attributes:
++--------------+--------------+--------------+--------------+--------------+--------------+
+| attrname     | offset       | length       | type         | indexed      | attrno       |
++--------------+--------------+--------------+--------------+--------------+--------------+
+| sid          |            0 |            4 | integer      | no           |            0 |
+| sname        |            4 |           16 | string       | no           |            1 |
+| gpa          |           20 |            4 | real         | no           |            2 |
+| age          |           24 |            4 | integer      | no           |            3 |
+| advisor      |           28 |            4 | integer      | no           |            4 |
++--------------+--------------+--------------+--------------+--------------+--------------+
+Relation student.sid:
++--------------+------------------+--------------+--------------+--------------+
+| sid          | sname            | gpa          | age          | advisor      |
++--------------+------------------+--------------+--------------+--------------+
+|            0 | student0         |    83.178589 |           10 |            0 |
+|            2 | student2         |    77.526825 |           12 |            2 |
+|            3 | student3         |    79.045563 |           13 |            3 |
+|            4 | student4         |    90.253090 |           14 |            4 |
+|            7 | student7         |    76.054733 |           17 |            7 |
+|            9 | student9         |    54.843029 |           19 |            9 |
+|           10 | student10        |    47.262310 |           20 |            0 |
+|           11 | student11        |    62.258221 |           21 |            1 |
+|           13 | student13        |    50.826691 |           23 |            3 |
+|           14 | student14        |    94.270744 |           24 |            4 |
+|           15 | student15        |    90.703316 |           25 |            5 |
+|           16 | student16        |    62.935463 |           26 |            6 |
+|           17 | student17        |    71.012398 |           27 |            7 |
+|           19 | student19        |    60.089920 |           29 |            9 |
+|           23 | student23        |    79.613495 |           33 |            3 |
+|           28 | student28        |    98.893524 |           38 |            8 |
++--------------+------------------+--------------+--------------+--------------+
+End show_table(student.sid) ...
+Start show_table(prof.pid) ...
+Relation  prof.pid:
+	Prim Attr:  pid	No of Attrs:  3	Tuple width:  24	No of Indices:  0
+Attributes:
++--------------+--------------+--------------+--------------+--------------+--------------+
+| attrname     | offset       | length       | type         | indexed      | attrno       |
++--------------+--------------+--------------+--------------+--------------+--------------+
+| pid          |            0 |            4 | integer      | no           |            0 |
+| pname        |            4 |           16 | string       | no           |            1 |
+| office       |           20 |            4 | integer      | no           |            2 |
++--------------+--------------+--------------+--------------+--------------+--------------+
+Relation prof.pid:
++--------------+------------------+--------------+
+| pid          | pname            | office       |
++--------------+------------------+--------------+
+|            2 | professor2       |          402 |
+|            3 | professor3       |          403 |
+|            4 | professor4       |          404 |
+|            5 | professor5       |          405 |
+|            6 | professor6       |          406 |
+|            7 | professor7       |          407 |
+|            8 | professor8       |          408 |
+|            9 | professor9       |          409 |
++--------------+------------------+--------------+
+End show_table(prof.pid) ...
+>>> Indexing / Joining students and professors ...
+Start index_student ...
+End index_student ...
+Start index_professor ...
+End index_professor ...
+Start joining students and professors ...
+End joining students and professors ...
+Start show_table(stud_prof) ...
+Relation  stud_prof:
+	Prim Attr:  sid	No of Attrs:  5	Tuple width:  44	No of Indices:  0
+Attributes:
++--------------+--------------+--------------+--------------+--------------+--------------+
+| attrname     | offset       | length       | type         | indexed      | attrno       |
++--------------+--------------+--------------+--------------+--------------+--------------+
+| sid          |            0 |            4 | integer      | no           |            0 |
+| sname        |            4 |           16 | string       | no           |            1 |
+| advisor      |           20 |            4 | integer      | no           |            2 |
+| pid          |           24 |            4 | integer      | no           |            3 |
+| pname        |           28 |           16 | string       | no           |            4 |
++--------------+--------------+--------------+--------------+--------------+--------------+
+Relation stud_prof:
++--------------+------------------+--------------+--------------+------------------+
+| sid          | sname            | advisor      | pid          | pname            |
++--------------+------------------+--------------+--------------+------------------+
+|            2 | student2         |            2 |            2 | professor2       |
+|            3 | student3         |            3 |            3 | professor3       |
+|           13 | student13        |            3 |            3 | professor3       |
+|           23 | student23        |            3 |            3 | professor3       |
+|            4 | student4         |            4 |            4 | professor4       |
+|           14 | student14        |            4 |            4 | professor4       |
+|           15 | student15        |            5 |            5 | professor5       |
+|           16 | student16        |            6 |            6 | professor6       |
+|            7 | student7         |            7 |            7 | professor7       |
+|           17 | student17        |            7 |            7 | professor7       |
+|           28 | student28        |            8 |            8 | professor8       |
+|            9 | student9         |            9 |            9 | professor9       |
+|           19 | student19        |            9 |            9 | professor9       |
++--------------+------------------+--------------+--------------+------------------+
+End show_table(stud_prof) ...
+Print the relation catalog
+Relation relcat:
++--------------+--------------+--------------+--------------+--------------+
+| relname      | relwid       | attrcnt      | indexcnt     | primattr     |
++--------------+--------------+--------------+--------------+--------------+
+| relcat       |           36 |            5 |            0 | relname      |
+| attrcat      |           44 |            7 |            0 | relname      |
+| student.sid  |           32 |            5 |            2 | sid          |
+| prof.pid     |           24 |            3 |            1 | pid          |
+| stud_prof    |           44 |            5 |            0 | sid          |
++--------------+--------------+--------------+--------------+--------------+
+Print the attribute catalog
+Relation attrcat:
++--------------+--------------+--------------+--------------+--------------+--------------+--------------+
+| relname      | attrname     | offset       | length       | type         | indexed      | attrno       |
++--------------+--------------+--------------+--------------+--------------+--------------+--------------+
+| relcat       | relname      |            0 |           12 | string       | no           |            0 |
+| relcat       | relwid       |           12 |            4 | integer      | no           |            1 |
+| relcat       | attrcnt      |           16 |            4 | integer      | no           |            2 |
+| relcat       | indexcnt     |           20 |            4 | integer      | no           |            3 |
+| relcat       | primattr     |           24 |           12 | string       | no           |            4 |
+| attrcat      | relname      |            0 |           12 | string       | no           |            0 |
+| attrcat      | attrname     |           12 |           12 | string       | no           |            1 |
+| attrcat      | offset       |           24 |            4 | integer      | no           |            2 |
+| attrcat      | length       |           28 |            4 | integer      | no           |            3 |
+| attrcat      | type         |           32 |            4 | integer      | no           |            4 |
+| attrcat      | indexed      |           36 |            4 | boolean      | no           |            5 |
+| attrcat      | attrno       |           40 |            4 | integer      | no           |            6 |
+| student.sid  | sid          |            0 |            4 | integer      | no           |            0 |
+| student.sid  | sname        |            4 |           16 | string       | yes          |            1 |
+| student.sid  | gpa          |           20 |            4 | real         | no           |            2 |
+| student.sid  | age          |           24 |            4 | integer      | yes          |            3 |
+| student.sid  | advisor      |           28 |            4 | integer      | no           |            4 |
+| prof.pid     | pid          |            0 |            4 | integer      | yes          |            0 |
+| prof.pid     | pname        |            4 |           16 | string       | no           |            1 |
+| prof.pid     | office       |           20 |            4 | integer      | no           |            2 |
+| stud_prof    | sid          |            0 |            4 | integer      | no           |            0 |
+| stud_prof    | sname        |            4 |           16 | string       | no           |            1 |
+| stud_prof    | advisor      |           20 |            4 | integer      | no           |            2 |
+| stud_prof    | pid          |           24 |            4 | integer      | no           |            3 |
+| stud_prof    | pname        |           28 |           16 | string       | no           |            4 |
++--------------+--------------+--------------+--------------+--------------+--------------+--------------+
+HelpTable with relcat
+Relation  relcat:
+	Prim Attr:  relname	No of Attrs:  5	Tuple width:  36	No of Indices:  0
+Attributes:
++--------------+--------------+--------------+--------------+--------------+--------------+
+| attrname     | offset       | length       | type         | indexed      | attrno       |
++--------------+--------------+--------------+--------------+--------------+--------------+
+| relname      |            0 |           12 | string       | no           |            0 |
+| relwid       |           12 |            4 | integer      | no           |            1 |
+| attrcnt      |           16 |            4 | integer      | no           |            2 |
+| indexcnt     |           20 |            4 | integer      | no           |            3 |
+| primattr     |           24 |           12 | string       | no           |            4 |
++--------------+--------------+--------------+--------------+--------------+--------------+
+HelpTable with attrcat
+Relation  attrcat:
+	Prim Attr:  relname	No of Attrs:  7	Tuple width:  44	No of Indices:  0
+Attributes:
++--------------+--------------+--------------+--------------+--------------+--------------+
+| attrname     | offset       | length       | type         | indexed      | attrno       |
++--------------+--------------+--------------+--------------+--------------+--------------+
+| relname      |            0 |           12 | string       | no           |            0 |
+| attrname     |           12 |           12 | string       | no           |            1 |
+| offset       |           24 |            4 | integer      | no           |            2 |
+| length       |           28 |            4 | integer      | no           |            3 |
+| type         |           32 |            4 | integer      | no           |            4 |
+| indexed      |           36 |            4 | boolean      | no           |            5 |
+| attrno       |           40 |            4 | integer      | no           |            6 |
++--------------+--------------+--------------+--------------+--------------+--------------+

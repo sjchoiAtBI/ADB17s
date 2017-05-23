@@ -1,0 +1,907 @@
+*** begin of hftest1 ***
+adding record: record0
+adding record: record1
+adding record: record2
+adding record: record3
+adding record: record4
+adding record: record5
+adding record: record6
+adding record: record7
+adding record: record8
+adding record: record9
+adding record: record10
+adding record: record11
+adding record: record12
+adding record: record13
+adding record: record14
+adding record: record15
+adding record: record16
+adding record: record17
+adding record: record18
+adding record: record19
+adding record: record20
+adding record: record21
+adding record: record22
+adding record: record23
+adding record: record24
+adding record: record25
+adding record: record26
+adding record: record27
+adding record: record28
+adding record: record29
+adding record: record30
+adding record: record31
+adding record: record32
+adding record: record33
+adding record: record34
+adding record: record35
+adding record: record36
+adding record: record37
+adding record: record38
+adding record: record39
+adding record: record40
+adding record: record41
+adding record: record42
+adding record: record43
+adding record: record44
+adding record: record45
+adding record: record46
+adding record: record47
+adding record: record48
+adding record: record49
+adding record: record50
+adding record: record51
+adding record: record52
+adding record: record53
+adding record: record54
+adding record: record55
+adding record: record56
+adding record: record57
+adding record: record58
+adding record: record59
+adding record: record60
+adding record: record61
+adding record: record62
+adding record: record63
+adding record: record64
+adding record: record65
+adding record: record66
+adding record: record67
+adding record: record68
+adding record: record69
+adding record: record70
+adding record: record71
+adding record: record72
+adding record: record73
+adding record: record74
+adding record: record75
+adding record: record76
+adding record: record77
+adding record: record78
+adding record: record79
+adding record: record80
+adding record: record81
+adding record: record82
+adding record: record83
+adding record: record84
+adding record: record85
+adding record: record86
+adding record: record87
+adding record: record88
+adding record: record89
+adding record: record90
+adding record: record91
+adding record: record92
+adding record: record93
+adding record: record94
+adding record: record95
+adding record: record96
+adding record: record97
+adding record: record98
+adding record: record99
+deleting record: record1
+deleting record: record3
+deleting record: record5
+deleting record: record7
+deleting record: record9
+deleting record: record11
+deleting record: record13
+deleting record: record15
+deleting record: record17
+deleting record: record19
+deleting record: record21
+deleting record: record23
+deleting record: record25
+deleting record: record27
+deleting record: record29
+deleting record: record31
+deleting record: record33
+deleting record: record35
+deleting record: record37
+deleting record: record39
+deleting record: record41
+deleting record: record43
+deleting record: record45
+deleting record: record47
+deleting record: record49
+deleting record: record51
+deleting record: record53
+deleting record: record55
+deleting record: record57
+deleting record: record59
+deleting record: record61
+deleting record: record63
+deleting record: record65
+deleting record: record67
+deleting record: record69
+deleting record: record71
+deleting record: record73
+deleting record: record75
+deleting record: record77
+deleting record: record79
+deleting record: record81
+deleting record: record83
+deleting record: record85
+deleting record: record87
+deleting record: record89
+deleting record: record91
+deleting record: record93
+deleting record: record95
+deleting record: record97
+deleting record: record99
+retrieved record: record0
+retrieved record: record2
+retrieved record: record4
+retrieved record: record6
+retrieved record: record8
+retrieved record: record10
+retrieved record: record12
+retrieved record: record14
+retrieved record: record16
+retrieved record: record18
+retrieved record: record20
+retrieved record: record22
+retrieved record: record24
+retrieved record: record26
+retrieved record: record28
+retrieved record: record30
+retrieved record: record32
+retrieved record: record34
+retrieved record: record36
+retrieved record: record38
+retrieved record: record40
+retrieved record: record42
+retrieved record: record44
+retrieved record: record46
+retrieved record: record48
+retrieved record: record50
+retrieved record: record52
+retrieved record: record54
+retrieved record: record56
+retrieved record: record58
+retrieved record: record60
+retrieved record: record62
+retrieved record: record64
+retrieved record: record66
+retrieved record: record68
+retrieved record: record70
+retrieved record: record72
+retrieved record: record74
+retrieved record: record76
+retrieved record: record78
+retrieved record: record80
+retrieved record: record82
+retrieved record: record84
+retrieved record: record86
+retrieved record: record88
+retrieved record: record90
+retrieved record: record92
+retrieved record: record94
+retrieved record: record96
+retrieved record: record98
+*** end of hftest1 ***
+*** begin of hftest2 ***
+adding record: record0
+adding record: record1
+adding record: record2
+adding record: record3
+adding record: record4
+adding record: record5
+adding record: record6
+adding record: record7
+adding record: record8
+adding record: record9
+adding record: record10
+adding record: record11
+adding record: record12
+adding record: record13
+adding record: record14
+adding record: record15
+adding record: record16
+adding record: record17
+adding record: record18
+adding record: record19
+adding record: record20
+adding record: record21
+adding record: record22
+adding record: record23
+adding record: record24
+adding record: record25
+adding record: record26
+adding record: record27
+adding record: record28
+adding record: record29
+adding record: record30
+adding record: record31
+adding record: record32
+adding record: record33
+adding record: record34
+adding record: record35
+adding record: record36
+adding record: record37
+adding record: record38
+adding record: record39
+adding record: record40
+adding record: record41
+adding record: record42
+adding record: record43
+adding record: record44
+adding record: record45
+adding record: record46
+adding record: record47
+adding record: record48
+adding record: record49
+adding record: record50
+adding record: record51
+adding record: record52
+adding record: record53
+adding record: record54
+adding record: record55
+adding record: record56
+adding record: record57
+adding record: record58
+adding record: record59
+adding record: record60
+adding record: record61
+adding record: record62
+adding record: record63
+adding record: record64
+adding record: record65
+adding record: record66
+adding record: record67
+adding record: record68
+adding record: record69
+adding record: record70
+adding record: record71
+adding record: record72
+adding record: record73
+adding record: record74
+adding record: record75
+adding record: record76
+adding record: record77
+adding record: record78
+adding record: record79
+adding record: record80
+adding record: record81
+adding record: record82
+adding record: record83
+adding record: record84
+adding record: record85
+adding record: record86
+adding record: record87
+adding record: record88
+adding record: record89
+adding record: record90
+adding record: record91
+adding record: record92
+adding record: record93
+adding record: record94
+adding record: record95
+adding record: record96
+adding record: record97
+adding record: record98
+adding record: record99
+deleting record: record1
+deleting record: record3
+deleting record: record5
+deleting record: record7
+deleting record: record9
+deleting record: record11
+deleting record: record13
+deleting record: record15
+deleting record: record17
+deleting record: record19
+deleting record: record21
+deleting record: record23
+deleting record: record25
+deleting record: record27
+deleting record: record29
+deleting record: record31
+deleting record: record33
+deleting record: record35
+deleting record: record37
+deleting record: record39
+deleting record: record41
+deleting record: record43
+deleting record: record45
+deleting record: record47
+deleting record: record49
+deleting record: record51
+deleting record: record53
+deleting record: record55
+deleting record: record57
+deleting record: record59
+deleting record: record61
+deleting record: record63
+deleting record: record65
+deleting record: record67
+deleting record: record69
+deleting record: record71
+deleting record: record73
+deleting record: record75
+deleting record: record77
+deleting record: record79
+deleting record: record81
+deleting record: record83
+deleting record: record85
+deleting record: record87
+deleting record: record89
+deleting record: record91
+deleting record: record93
+deleting record: record95
+deleting record: record97
+deleting record: record99
+retrieved record: record0
+retrieved record: record2
+retrieved record: record4
+retrieved record: record6
+retrieved record: record8
+retrieved record: record10
+retrieved record: record12
+retrieved record: record14
+retrieved record: record16
+retrieved record: record18
+retrieved record: record20
+retrieved record: record22
+retrieved record: record24
+retrieved record: record26
+retrieved record: record28
+retrieved record: record30
+retrieved record: record32
+retrieved record: record34
+retrieved record: record36
+retrieved record: record38
+retrieved record: record40
+retrieved record: record42
+retrieved record: record44
+retrieved record: record46
+retrieved record: record48
+retrieved record: record50
+retrieved record: record52
+retrieved record: record54
+retrieved record: record56
+retrieved record: record58
+retrieved record: record60
+retrieved record: record62
+retrieved record: record64
+retrieved record: record66
+retrieved record: record68
+retrieved record: record70
+retrieved record: record72
+retrieved record: record74
+retrieved record: record76
+retrieved record: record78
+retrieved record: record80
+retrieved record: record82
+retrieved record: record84
+retrieved record: record86
+retrieved record: record88
+retrieved record: record90
+retrieved record: record92
+retrieved record: record94
+retrieved record: record96
+retrieved record: record98
+Inserting new record: New record 1
+Inserting new record: New record 2
+Inserting new record: New record 3
+Inserting new record: New record 4
+Inserting new record: New record 5
+Inserting new record: New record 6
+Inserting new record: New record 7
+Inserting new record: New record 8
+Inserting new record: New record 9
+Inserting new record: New record 10
+Inserting new record: New record 11
+Inserting new record: New record 12
+Inserting new record: New record 13
+Inserting new record: New record 14
+Inserting new record: New record 15
+Inserting new record: New record 16
+Inserting new record: New record 17
+Inserting new record: New record 18
+Inserting new record: New record 19
+Inserting new record: New record 20
+Inserting new record: New record 21
+Inserting new record: New record 22
+Inserting new record: New record 23
+Inserting new record: New record 24
+Inserting new record: New record 25
+Inserting new record: New record 26
+Inserting new record: New record 27
+Inserting new record: New record 28
+Inserting new record: New record 29
+Inserting new record: New record 30
+Inserting new record: New record 31
+Inserting new record: New record 32
+Inserting new record: New record 33
+Inserting new record: New record 34
+Inserting new record: New record 35
+Inserting new record: New record 36
+Inserting new record: New record 37
+Inserting new record: New record 38
+Inserting new record: New record 39
+Inserting new record: New record 40
+Inserting new record: New record 41
+Inserting new record: New record 42
+Inserting new record: New record 43
+Inserting new record: New record 44
+Inserting new record: New record 45
+Inserting new record: New record 46
+Inserting new record: New record 47
+Inserting new record: New record 48
+Inserting new record: New record 49
+Inserting new record: New record 50
+Inserting new record: New record 51
+Inserting new record: New record 52
+Inserting new record: New record 53
+Inserting new record: New record 54
+Inserting new record: New record 55
+Inserting new record: New record 56
+Inserting new record: New record 57
+Inserting new record: New record 58
+Inserting new record: New record 59
+Inserting new record: New record 60
+Inserting new record: New record 61
+Inserting new record: New record 62
+Inserting new record: New record 63
+Inserting new record: New record 64
+Inserting new record: New record 65
+Inserting new record: New record 66
+Inserting new record: New record 67
+Inserting new record: New record 68
+Inserting new record: New record 69
+Inserting new record: New record 70
+Inserting new record: New record 71
+Inserting new record: New record 72
+Inserting new record: New record 73
+Inserting new record: New record 74
+Inserting new record: New record 75
+Inserting new record: New record 76
+Inserting new record: New record 77
+Inserting new record: New record 78
+Inserting new record: New record 79
+Inserting new record: New record 80
+Inserting new record: New record 81
+Inserting new record: New record 82
+Inserting new record: New record 83
+Inserting new record: New record 84
+Inserting new record: New record 85
+Inserting new record: New record 86
+Inserting new record: New record 87
+Inserting new record: New record 88
+Inserting new record: New record 89
+Inserting new record: New record 90
+Inserting new record: New record 91
+Inserting new record: New record 92
+Inserting new record: New record 93
+Inserting new record: New record 94
+Inserting new record: New record 95
+Inserting new record: New record 96
+Inserting new record: New record 97
+Inserting new record: New record 98
+Inserting new record: New record 99
+retrieved record: record0
+retrieved record: New record 26
+retrieved record: record2
+retrieved record: New record 27
+retrieved record: record4
+retrieved record: New record 28
+retrieved record: record6
+retrieved record: New record 29
+retrieved record: record8
+retrieved record: New record 30
+retrieved record: record10
+retrieved record: New record 31
+retrieved record: record12
+retrieved record: New record 32
+retrieved record: record14
+retrieved record: New record 33
+retrieved record: record16
+retrieved record: New record 34
+retrieved record: record18
+retrieved record: New record 35
+retrieved record: record20
+retrieved record: New record 36
+retrieved record: record22
+retrieved record: New record 37
+retrieved record: record24
+retrieved record: New record 38
+retrieved record: record26
+retrieved record: New record 39
+retrieved record: record28
+retrieved record: New record 40
+retrieved record: record30
+retrieved record: New record 41
+retrieved record: record32
+retrieved record: New record 42
+retrieved record: record34
+retrieved record: New record 43
+retrieved record: record36
+retrieved record: New record 44
+retrieved record: record38
+retrieved record: New record 45
+retrieved record: record40
+retrieved record: New record 46
+retrieved record: record42
+retrieved record: New record 47
+retrieved record: record44
+retrieved record: New record 48
+retrieved record: record46
+retrieved record: New record 49
+retrieved record: record48
+retrieved record: New record 50
+retrieved record: record50
+retrieved record: New record 1
+retrieved record: record52
+retrieved record: New record 2
+retrieved record: record54
+retrieved record: New record 3
+retrieved record: record56
+retrieved record: New record 4
+retrieved record: record58
+retrieved record: New record 5
+retrieved record: record60
+retrieved record: New record 6
+retrieved record: record62
+retrieved record: New record 7
+retrieved record: record64
+retrieved record: New record 8
+retrieved record: record66
+retrieved record: New record 9
+retrieved record: record68
+retrieved record: New record 10
+retrieved record: record70
+retrieved record: New record 11
+retrieved record: record72
+retrieved record: New record 12
+retrieved record: record74
+retrieved record: New record 13
+retrieved record: record76
+retrieved record: New record 14
+retrieved record: record78
+retrieved record: New record 15
+retrieved record: record80
+retrieved record: New record 16
+retrieved record: record82
+retrieved record: New record 17
+retrieved record: record84
+retrieved record: New record 18
+retrieved record: record86
+retrieved record: New record 19
+retrieved record: record88
+retrieved record: New record 20
+retrieved record: record90
+retrieved record: New record 21
+retrieved record: record92
+retrieved record: New record 22
+retrieved record: record94
+retrieved record: New record 23
+retrieved record: record96
+retrieved record: New record 24
+retrieved record: record98
+retrieved record: New record 25
+retrieved record: New record 51
+retrieved record: New record 52
+retrieved record: New record 53
+retrieved record: New record 54
+retrieved record: New record 55
+retrieved record: New record 56
+retrieved record: New record 57
+retrieved record: New record 58
+retrieved record: New record 59
+retrieved record: New record 60
+retrieved record: New record 61
+retrieved record: New record 62
+retrieved record: New record 63
+retrieved record: New record 64
+retrieved record: New record 65
+retrieved record: New record 66
+retrieved record: New record 67
+retrieved record: New record 68
+retrieved record: New record 69
+retrieved record: New record 70
+retrieved record: New record 71
+retrieved record: New record 72
+retrieved record: New record 73
+retrieved record: New record 74
+retrieved record: New record 75
+retrieved record: New record 76
+retrieved record: New record 77
+retrieved record: New record 78
+retrieved record: New record 79
+retrieved record: New record 80
+retrieved record: New record 81
+retrieved record: New record 82
+retrieved record: New record 83
+retrieved record: New record 84
+retrieved record: New record 85
+retrieved record: New record 86
+retrieved record: New record 87
+retrieved record: New record 88
+retrieved record: New record 89
+retrieved record: New record 90
+retrieved record: New record 91
+retrieved record: New record 92
+retrieved record: New record 93
+retrieved record: New record 94
+retrieved record: New record 95
+retrieved record: New record 96
+retrieved record: New record 97
+retrieved record: New record 98
+retrieved record: New record 99
+*** end of hftest2 ***
+*** begin of hftest3 *** 
+inserting structured record: (entry0, 0.000000, 0)
+inserting structured record: (entry1, 1.000000, 1)
+inserting structured record: (entry2, 2.000000, 2)
+inserting structured record: (entry3, 3.000000, 3)
+inserting structured record: (entry4, 4.000000, 4)
+inserting structured record: (entry5, 5.000000, 5)
+inserting structured record: (entry6, 6.000000, 6)
+inserting structured record: (entry7, 7.000000, 7)
+inserting structured record: (entry8, 8.000000, 8)
+inserting structured record: (entry9, 9.000000, 9)
+inserting structured record: (entry10, 10.000000, 10)
+inserting structured record: (entry11, 11.000000, 11)
+inserting structured record: (entry12, 12.000000, 12)
+inserting structured record: (entry13, 13.000000, 13)
+inserting structured record: (entry14, 14.000000, 14)
+inserting structured record: (entry15, 15.000000, 15)
+inserting structured record: (entry16, 16.000000, 16)
+inserting structured record: (entry17, 17.000000, 17)
+inserting structured record: (entry18, 18.000000, 18)
+inserting structured record: (entry19, 19.000000, 19)
+inserting structured record: (entry20, 20.000000, 20)
+inserting structured record: (entry21, 21.000000, 21)
+inserting structured record: (entry22, 22.000000, 22)
+inserting structured record: (entry23, 23.000000, 23)
+inserting structured record: (entry24, 24.000000, 24)
+inserting structured record: (entry25, 25.000000, 25)
+inserting structured record: (entry26, 26.000000, 26)
+inserting structured record: (entry27, 27.000000, 27)
+inserting structured record: (entry28, 28.000000, 28)
+inserting structured record: (entry29, 29.000000, 29)
+inserting structured record: (entry30, 30.000000, 30)
+inserting structured record: (entry31, 31.000000, 31)
+inserting structured record: (entry32, 32.000000, 32)
+inserting structured record: (entry33, 33.000000, 33)
+inserting structured record: (entry34, 34.000000, 34)
+inserting structured record: (entry35, 35.000000, 35)
+inserting structured record: (entry36, 36.000000, 36)
+inserting structured record: (entry37, 37.000000, 37)
+inserting structured record: (entry38, 38.000000, 38)
+inserting structured record: (entry39, 39.000000, 39)
+inserting structured record: (entry40, 40.000000, 40)
+inserting structured record: (entry41, 41.000000, 41)
+inserting structured record: (entry42, 42.000000, 42)
+inserting structured record: (entry43, 43.000000, 43)
+inserting structured record: (entry44, 44.000000, 44)
+inserting structured record: (entry45, 45.000000, 45)
+inserting structured record: (entry46, 46.000000, 46)
+inserting structured record: (entry47, 47.000000, 47)
+inserting structured record: (entry48, 48.000000, 48)
+inserting structured record: (entry49, 49.000000, 49)
+inserting structured record: (entry50, 50.000000, 50)
+inserting structured record: (entry51, 51.000000, 51)
+inserting structured record: (entry52, 52.000000, 52)
+inserting structured record: (entry53, 53.000000, 53)
+inserting structured record: (entry54, 54.000000, 54)
+inserting structured record: (entry55, 55.000000, 55)
+inserting structured record: (entry56, 56.000000, 56)
+inserting structured record: (entry57, 57.000000, 57)
+inserting structured record: (entry58, 58.000000, 58)
+inserting structured record: (entry59, 59.000000, 59)
+inserting structured record: (entry60, 60.000000, 60)
+inserting structured record: (entry61, 61.000000, 61)
+inserting structured record: (entry62, 62.000000, 62)
+inserting structured record: (entry63, 63.000000, 63)
+inserting structured record: (entry64, 64.000000, 64)
+inserting structured record: (entry65, 65.000000, 65)
+inserting structured record: (entry66, 66.000000, 66)
+inserting structured record: (entry67, 67.000000, 67)
+inserting structured record: (entry68, 68.000000, 68)
+inserting structured record: (entry69, 69.000000, 69)
+inserting structured record: (entry70, 70.000000, 70)
+inserting structured record: (entry71, 71.000000, 71)
+inserting structured record: (entry72, 72.000000, 72)
+inserting structured record: (entry73, 73.000000, 73)
+inserting structured record: (entry74, 74.000000, 74)
+inserting structured record: (entry75, 75.000000, 75)
+inserting structured record: (entry76, 76.000000, 76)
+inserting structured record: (entry77, 77.000000, 77)
+inserting structured record: (entry78, 78.000000, 78)
+inserting structured record: (entry79, 79.000000, 79)
+inserting structured record: (entry80, 80.000000, 80)
+inserting structured record: (entry81, 81.000000, 81)
+inserting structured record: (entry82, 82.000000, 82)
+inserting structured record: (entry83, 83.000000, 83)
+inserting structured record: (entry84, 84.000000, 84)
+inserting structured record: (entry85, 85.000000, 85)
+inserting structured record: (entry86, 86.000000, 86)
+inserting structured record: (entry87, 87.000000, 87)
+inserting structured record: (entry88, 88.000000, 88)
+inserting structured record: (entry89, 89.000000, 89)
+inserting structured record: (entry90, 90.000000, 90)
+inserting structured record: (entry91, 91.000000, 91)
+inserting structured record: (entry92, 92.000000, 92)
+inserting structured record: (entry93, 93.000000, 93)
+inserting structured record: (entry94, 94.000000, 94)
+inserting structured record: (entry95, 95.000000, 95)
+inserting structured record: (entry96, 96.000000, 96)
+inserting structured record: (entry97, 97.000000, 97)
+inserting structured record: (entry98, 98.000000, 98)
+inserting structured record: (entry99, 99.000000, 99)
+retrieved structured record: (entry0, 0.000000, 0)
+retrieved structured record: (entry1, 1.000000, 1)
+retrieved structured record: (entry2, 2.000000, 2)
+retrieved structured record: (entry3, 3.000000, 3)
+retrieved structured record: (entry4, 4.000000, 4)
+retrieved structured record: (entry5, 5.000000, 5)
+retrieved structured record: (entry6, 6.000000, 6)
+retrieved structured record: (entry7, 7.000000, 7)
+retrieved structured record: (entry8, 8.000000, 8)
+retrieved structured record: (entry9, 9.000000, 9)
+retrieved structured record: (entry10, 10.000000, 10)
+retrieved structured record: (entry11, 11.000000, 11)
+retrieved structured record: (entry12, 12.000000, 12)
+retrieved structured record: (entry13, 13.000000, 13)
+retrieved structured record: (entry14, 14.000000, 14)
+retrieved structured record: (entry15, 15.000000, 15)
+retrieved structured record: (entry16, 16.000000, 16)
+retrieved structured record: (entry17, 17.000000, 17)
+retrieved structured record: (entry18, 18.000000, 18)
+retrieved structured record: (entry19, 19.000000, 19)
+retrieved structured record: (entry20, 20.000000, 20)
+retrieved structured record: (entry21, 21.000000, 21)
+retrieved structured record: (entry22, 22.000000, 22)
+retrieved structured record: (entry23, 23.000000, 23)
+retrieved structured record: (entry24, 24.000000, 24)
+retrieved structured record: (entry25, 25.000000, 25)
+retrieved structured record: (entry26, 26.000000, 26)
+retrieved structured record: (entry27, 27.000000, 27)
+retrieved structured record: (entry28, 28.000000, 28)
+retrieved structured record: (entry29, 29.000000, 29)
+retrieved structured record: (entry30, 30.000000, 30)
+retrieved structured record: (entry31, 31.000000, 31)
+retrieved structured record: (entry32, 32.000000, 32)
+retrieved structured record: (entry33, 33.000000, 33)
+retrieved structured record: (entry34, 34.000000, 34)
+retrieved structured record: (entry35, 35.000000, 35)
+retrieved structured record: (entry36, 36.000000, 36)
+retrieved structured record: (entry37, 37.000000, 37)
+retrieved structured record: (entry38, 38.000000, 38)
+retrieved structured record: (entry39, 39.000000, 39)
+retrieved structured record: (entry40, 40.000000, 40)
+retrieved structured record: (entry41, 41.000000, 41)
+retrieved structured record: (entry42, 42.000000, 42)
+retrieved structured record: (entry43, 43.000000, 43)
+retrieved structured record: (entry44, 44.000000, 44)
+retrieved structured record: (entry45, 45.000000, 45)
+retrieved structured record: (entry46, 46.000000, 46)
+retrieved structured record: (entry47, 47.000000, 47)
+retrieved structured record: (entry48, 48.000000, 48)
+retrieved structured record: (entry49, 49.000000, 49)
+retrieved structured record: (entry50, 50.000000, 50)
+retrieved structured record: (entry51, 51.000000, 51)
+retrieved structured record: (entry52, 52.000000, 52)
+retrieved structured record: (entry53, 53.000000, 53)
+retrieved structured record: (entry54, 54.000000, 54)
+retrieved structured record: (entry55, 55.000000, 55)
+retrieved structured record: (entry56, 56.000000, 56)
+retrieved structured record: (entry57, 57.000000, 57)
+retrieved structured record: (entry58, 58.000000, 58)
+retrieved structured record: (entry59, 59.000000, 59)
+retrieved structured record: (entry60, 60.000000, 60)
+retrieved structured record: (entry61, 61.000000, 61)
+retrieved structured record: (entry62, 62.000000, 62)
+retrieved structured record: (entry63, 63.000000, 63)
+retrieved structured record: (entry64, 64.000000, 64)
+retrieved structured record: (entry65, 65.000000, 65)
+retrieved structured record: (entry66, 66.000000, 66)
+retrieved structured record: (entry67, 67.000000, 67)
+retrieved structured record: (entry68, 68.000000, 68)
+retrieved structured record: (entry69, 69.000000, 69)
+retrieved structured record: (entry70, 70.000000, 70)
+retrieved structured record: (entry71, 71.000000, 71)
+retrieved structured record: (entry72, 72.000000, 72)
+retrieved structured record: (entry73, 73.000000, 73)
+retrieved structured record: (entry74, 74.000000, 74)
+retrieved structured record: (entry75, 75.000000, 75)
+retrieved structured record: (entry76, 76.000000, 76)
+retrieved structured record: (entry77, 77.000000, 77)
+retrieved structured record: (entry78, 78.000000, 78)
+retrieved structured record: (entry79, 79.000000, 79)
+retrieved structured record: (entry80, 80.000000, 80)
+retrieved structured record: (entry81, 81.000000, 81)
+retrieved structured record: (entry82, 82.000000, 82)
+retrieved structured record: (entry83, 83.000000, 83)
+retrieved structured record: (entry84, 84.000000, 84)
+retrieved structured record: (entry85, 85.000000, 85)
+retrieved structured record: (entry86, 86.000000, 86)
+retrieved structured record: (entry87, 87.000000, 87)
+retrieved structured record: (entry88, 88.000000, 88)
+retrieved structured record: (entry89, 89.000000, 89)
+retrieved structured record: (entry90, 90.000000, 90)
+retrieved structured record: (entry91, 91.000000, 91)
+retrieved structured record: (entry92, 92.000000, 92)
+retrieved structured record: (entry93, 93.000000, 93)
+retrieved structured record: (entry94, 94.000000, 94)
+retrieved structured record: (entry95, 95.000000, 95)
+retrieved structured record: (entry96, 96.000000, 96)
+retrieved structured record: (entry97, 97.000000, 97)
+retrieved structured record: (entry98, 98.000000, 98)
+retrieved structured record: (entry99, 99.000000, 99)
+<< Scan records whose floating value >= 50 >>
+scanned structured record: (entry50, 50.000000, 50)
+scanned structured record: (entry51, 51.000000, 51)
+scanned structured record: (entry52, 52.000000, 52)
+scanned structured record: (entry53, 53.000000, 53)
+scanned structured record: (entry54, 54.000000, 54)
+scanned structured record: (entry55, 55.000000, 55)
+scanned structured record: (entry56, 56.000000, 56)
+scanned structured record: (entry57, 57.000000, 57)
+scanned structured record: (entry58, 58.000000, 58)
+scanned structured record: (entry59, 59.000000, 59)
+scanned structured record: (entry60, 60.000000, 60)
+scanned structured record: (entry61, 61.000000, 61)
+scanned structured record: (entry62, 62.000000, 62)
+scanned structured record: (entry63, 63.000000, 63)
+scanned structured record: (entry64, 64.000000, 64)
+scanned structured record: (entry65, 65.000000, 65)
+scanned structured record: (entry66, 66.000000, 66)
+scanned structured record: (entry67, 67.000000, 67)
+scanned structured record: (entry68, 68.000000, 68)
+scanned structured record: (entry69, 69.000000, 69)
+scanned structured record: (entry70, 70.000000, 70)
+scanned structured record: (entry71, 71.000000, 71)
+scanned structured record: (entry72, 72.000000, 72)
+scanned structured record: (entry73, 73.000000, 73)
+scanned structured record: (entry74, 74.000000, 74)
+scanned structured record: (entry75, 75.000000, 75)
+scanned structured record: (entry76, 76.000000, 76)
+scanned structured record: (entry77, 77.000000, 77)
+scanned structured record: (entry78, 78.000000, 78)
+scanned structured record: (entry79, 79.000000, 79)
+scanned structured record: (entry80, 80.000000, 80)
+scanned structured record: (entry81, 81.000000, 81)
+scanned structured record: (entry82, 82.000000, 82)
+scanned structured record: (entry83, 83.000000, 83)
+scanned structured record: (entry84, 84.000000, 84)
+scanned structured record: (entry85, 85.000000, 85)
+scanned structured record: (entry86, 86.000000, 86)
+scanned structured record: (entry87, 87.000000, 87)
+scanned structured record: (entry88, 88.000000, 88)
+scanned structured record: (entry89, 89.000000, 89)
+scanned structured record: (entry90, 90.000000, 90)
+scanned structured record: (entry91, 91.000000, 91)
+scanned structured record: (entry92, 92.000000, 92)
+scanned structured record: (entry93, 93.000000, 93)
+scanned structured record: (entry94, 94.000000, 94)
+scanned structured record: (entry95, 95.000000, 95)
+scanned structured record: (entry96, 96.000000, 96)
+scanned structured record: (entry97, 97.000000, 97)
+scanned structured record: (entry98, 98.000000, 98)
+scanned structured record: (entry99, 99.000000, 99)
+<< fetch a record whose int value = 77 >>
+record fetched by id: (entry77, 77.000000, 77)
+*** end of hftest3 *** 

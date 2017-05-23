@@ -1,0 +1,297 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3c.org/TR/html4/strict.dtd">
+<html>
+  <head>
+    <title>Introduction in </title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <link rel="start" href="minirel-web.html" title="">
+    <link rel="prev" href="minirel-web.html" title="">
+    <link rel="next" href="S2.html" title="§2. The Buffer Pool (BF) Layer">
+    <link rel="stylesheet" type="text/css" href="core.css">
+  </head>
+  <body>
+    <div class="navbar">
+<a href="minirel-web.html" title="" class="ref start">?</a>
+  <ul class="toc">
+  <li class="tocentry self" id="">
+<span class="ref toc here">§1 Introduction</span>
+  <ul class="toc">
+  <li class="tocentry" id=""><a href="#SS1" title="§1.1. Guidelines in §1. Introduction" class="ref toc">§1.1 Guidelines</a></li>
+  <li class="tocentry" id=""><a href="#SS2" title="§1.2. Project Requirements in §1. Introduction" class="ref toc">§1.2 Project Requirements</a></li>
+  <li class="tocentry" id=""><a href="#SS3" title="§1.3. Project Groups in §1. Introduction" class="ref toc">§1.3 Project Groups</a></li>
+  <li class="tocentry" id=""><a href="#SS4" title="§1.4. Project Schedules and Weights in §1. Introduction" class="ref toc">§1.4 Project Schedules and Weights</a></li>
+  <li class="tocentry" id=""><a href="#SS5" title="§1.5. Submission and Grading Policy in §1. Introduction" class="ref toc">§1.5 Submission and Grading Policy</a></li>
+  <li class="tocentry" id=""><a href="#SS6" title="§1.6. Benchmarking in §1. Introduction" class="ref toc">§1.6 Benchmarking</a></li>
+    </ul>
+</li>
+  <li class="tocentry" id=""><a href="S2.html" title="§2. The Buffer Pool (BF) Layer" class="ref toc">§2 The Buffer Pool (BF) Layer</a></li>
+  <li class="tocentry" id=""><a href="S3.html" title="§3. The Paged File (PF) Layer" class="ref toc">§3 The Paged File (PF) Layer</a></li>
+    </ul>
+      </div>
+    <div class="main">
+    <div class="header">
+<a href="minirel-web.html" title="" class="ref up">?</a><a href="minirel-web.html" title="" class="ref previous">?</a><a href="S2.html" title="§2. The Buffer Pool (BF) Layer" class="ref next">§2 The Buffer Pool (BF) Layer</a>
+      </div>
+    <div class="content">
+<div class="section" id="">
+<h1 class="title section-title">§ 1. Introduction</h1>
+<div class="para" id="p1"><p class="p">Throughout the semester, you will be working on a project to build
+a simplified relational database system called <span style="" class="text smallcaps">MiniRel</span>.
+The implementation of a <span style="" class="text italic">single-user</span> <span style="" class="text smallcaps">MiniRel</span> is composed of five layers:
+the buffer pool (BF) layer,
+the paged file (PF) layer, the heap file (HF) layer,
+the access method (AM) layer, and the front-end (FE) layer.
+The BF layer is the lowest in the layered architecture of <span style="" class="text smallcaps">MiniRel</span>.
+The HF and AM layers are located at the same architectural level
+on top of the PF layer, with the FE layer being the highest level.</p></div>
+<div class="para" id="p2"><p class="p">Part I (the BF layer) and Part II (the PF layer) involve the implementation
+of code to manage a buffer pool and to manipulate files that contain
+a sequence of pages, respectively.
+Part III (the HF layer) involves the implementation of heap file management
+to provide the abstraction of random and sequential access to fixed-length
+records stored in files.
+Part IV (the AM layer) involves implementing procedures for <img src="mi/mi1.png" width="32" height="23" alt="B^{+}" class="math">-tree
+index structures to speed up associative access to records.
+For Part V (the FE layer), this layer implements
+catalog management, data definition language (DDL),
+and data manipulation language (DML).
+To help you implement the Part V quickly,
+a parser to parse user commands will be provided.</p></div>
+<div class="figure" id="F1">
+<p class="p centering"><span style="background:black; " class="rule"> </span><table align="center" class="tabular"><tbody class="tbody"><tr class="tr">
+<td align="center" class="td"><img src="x1.png" width="396" height="227" class="graphics" alt=""></td>
+</tr></tbody></table></p>
+<div class="caption">
+      Figure 1. <span style="" class="text smallcaps">MiniRel</span> System Architecture</div>
+<p class="p"><span style="background:black; " class="rule"> </span></p>
+</div>
+<div class="para" id="p3">
+<p class="p">When all the five parts of the <span style="" class="text smallcaps">MiniRel</span> project are completed,
+the final deliverables will produce the followings:</p>
+<ul class="itemize" id="I1">
+<li class="item" id="I1.i1"><div class="para" id="I1.i1.p1"><p class="p">Three executables: <span style="" class="text typewriter">dbcreate</span>, <span style="" class="text typewriter">dbdestroy</span> and <span style="" class="text typewriter">minirel</span>,</p></div></li>
+<li class="item" id="I1.i2"><div class="para" id="I1.i2.p1"><p class="p">Six function libraries: <span style="" class="text typewriter">libbf.a</span>, <span style="" class="text typewriter">libpf.a</span>, <span style="" class="text typewriter">libhf.a</span>,
+<span style="" class="text typewriter">libam.a</span>, <span style="" class="text typewriter">libfe.a</span>, and <span style="" class="text typewriter">libparser.a</span>.</p></div></li>
+</ul>
+<p class="p">However, some of the deliverables may be provided or excluded from
+the scope of the project.</p>
+</div>
+<div class="subsection" id="SS1">
+<h2 class="title subsection-title">§ 1.1. Guidelines</h2>
+<div class="para" id="SS1.p1"><p class="p">We will maintain a public directory for the project
+(or an archive of the entire directory tree will be provided).
+The public directory will contain a top-level <span style="" class="text typewriter">Makefile</span>
+for the entire <span style="" class="text smallcaps">MiniRel</span> system generation,
+a sub-directory for <span style="" class="text typewriter">XX.h</span> header files,
+a sub-directory <span style="" class="text typewriter">XX</span> for each part of the project where
+<span style="" class="text typewriter">XXtest.c</span> files and a sample <span style="" class="text typewriter">Makefile</span> are included
+for you to test your code.</p></div>
+<div class="para" id="SS1.p2">
+<p class="p">You can copy everything in the public directory to your working directory,
+and modify them as needed except for the header files.
+You can add your own header files, but are not allowed to modify
+any header file provided in the public directory.
+<span style="" class="text italic">We will use the original header files in the public directory
+to build your function library and test your project.</span>
+You may want to define an environment variable <span style="" class="text typewriter">MINIREL_HOME</span>
+to utilize the Makefiles in the public directory.
+It can be done as follows. The exact syntax may be different.</p>
+<blockquote class="quote"><pre class="verbatim">
+% setenv MINIREL_HOME YOUR_WORKING_DIRECTORY
+</pre></blockquote>
+</div>
+</div>
+<div class="subsection" id="SS2">
+<h2 class="title subsection-title">§ 1.2. Project Requirements</h2>
+<div class="para" id="SS2.p1"><ul class="itemize" id="I2">
+<li class="item" id="I2.i1"><div class="para" id="I2.i1.p1"><p class="p">Each part of the <span style="" class="text smallcaps">MiniRel</span> project will produce a function library
+<span style="" class="text typewriter">libXX.a</span> associated with one of the five layers
+<span style="" class="text typewriter">BF</span>, <span style="" class="text typewriter">PF</span>, <span style="" class="text typewriter">HF</span>, <span style="" class="text typewriter">AM</span>, and <span style="" class="text typewriter">FE</span>.
+For example, in the BF layer, the library will be called <span style="" class="text typewriter">libbf.a</span>,
+and will be made of the functions defined for the BF layer.</p></div></li>
+<li class="item" id="I2.i2"><div class="para" id="I2.i2.p1"><p class="p">All the code for each layer must be in a directory of its own.
+An <span style="" class="text italic">external header file</span> provided for each layer
+(<span style="" class="text italic">e.g.</span>, <span style="" class="text typewriter">bf.h</span> for the BF layer)
+contains the layer's function prototypes and exported types.
+This header file will then be included (later on) in client layers,
+which need to use the layer's functions.
+If you need to augment the external header file, you can create
+your own <span style="" class="text italic">internal header files</span> instead of modifying
+the external header file.
+</p></div></li>
+<li class="item" id="I2.i3"><div class="para" id="I2.i3.p1">
+<p class="p">A <span style="" class="text typewriter">Makefile</span> with the following targets is required for each part:</p>
+<ul class="itemize" id="">
+<li class="item" id="I2.I1.i1"><div class="para" id="I2.I1.i1.p1"><p class="p"><span style="" class="text typewriter">all</span>: Makes all your system.</p></div></li>
+<li class="item" id="I2.I1.i2"><div class="para" id="I2.I1.i2.p1"><p class="p"><span style="" class="text typewriter">XXtest</span>: Produces an executable file <span style="" class="text typewriter">XXtest</span>.
+We will provide a file <span style="" class="text typewriter">XXtest.c</span> for each layer,
+which contains a few test scenarios.
+However, we do not guarantee that the test scenarios will examine
+every aspect of your code, or that they will detect every bug
+in your code.
+We <span style="" class="text italic">strongly</span> suggest that you write your own test cases
+(perhaps based on ours) to test your code more thoroughly.
+We will use our own <span style="" class="text typewriter">XXtest.c</span>, different from the one provided,
+to test and grade your system.</p></div></li>
+<li class="item" id="I2.I1.i3"><div class="para" id="I2.I1.i3.p1"><p class="p"><span style="" class="text typewriter">libXX.a</span>: Produces the XX layer function library.
+</p></div></li>
+<li class="item" id="I2.I1.i4"><div class="para" id="I2.I1.i4.p1"><p class="p"><span style="" class="text typewriter">clean</span>: Gets rid of <span style="" class="text typewriter">*.o</span> files, the <span style="" class="text typewriter">libXX.a</span> library
+and the executable <span style="" class="text typewriter">XXtest</span>.
+</p></div></li>
+</ul>
+<p class="p">The <span style="" class="text typewriter">Makefile</span> provided in the BF layer should be used
+as an example of how your <span style="" class="text typewriter">Makefile</span> for another layer
+should look. When grading, the TA will do the following:</p>
+<blockquote class="quote"><pre class="verbatim">
+        % make clean
+        % make XXtest
+        % XXtest
+        
+</pre></blockquote>
+<p class="p">So, it is highly recommended that you try this yourself
+to make sure your <span style="" class="text typewriter">Makefile</span> works properly.</p>
+</div></li>
+<li class="item" id="I2.i4"><div class="para" id="I2.i4.p1"><p class="p">Use the GNU <span style="" class="text typewriter">gcc</span> compiler version 4 or higher
+with <span style="" class="text typewriter">-ansi -pedantic</span> compilation switch
+for strict ANSI Standard C programming.</p></div></li>
+<li class="item" id="I2.i5"><div class="para" id="I2.i5.p1"><p class="p">Note that part of your grade will depend on the clarity
+and documentation of your code.
+Source code documentation is very controversial.
+Use the source codes that are provided in the public directory
+as an example of the kind of documentation we expect.
+In general a description at the beginning of each function
+must be present. In this description, you must provide
+information about the parameters of the function,
+the value the function returns, and a general idea of
+what the function implements.
+Also comment major sections of code to describe what they are doing.
+Please choose meaningful names for your functions and variables,
+and use #<span style="" class="text typewriter">define</span> to identify any constants in your code.
+<span style="" class="text italic">No Magic Numbers in your code!!</span></p></div></li>
+<li class="item" id="I2.i6"><div class="para" id="I2.i6.p1"><p class="p">A system report.
+This report should explain the implementation approach you followed,
+including overall techniques, important data structures,
+tricky design decisions, and anything else that you may want us
+to know. This report should be a short one (<span style="" class="text italic">2-3 pages</span>)
+but should be well written and <span style="" class="text italic">spell-checked</span>.</p></div></li>
+</ul></div>
+</div>
+<div class="subsection" id="SS3">
+<h2 class="title subsection-title">§ 1.3. Project Groups</h2>
+<div class="para" id="SS3.p1"><p class="p">This project is to be done in <span style="" class="text italic">a group of two or three students</span>,
+and there will be no singles without instructor's permission.
+Choose your group members very carefully, as you will be working together
+throughout the semester. Try to pick up partners who are equally interested
+in doing a good job, as otherwise problems are sure to arise later on.</p></div>
+</div>
+<div class="subsection" id="SS4">
+<h2 class="title subsection-title">§ 1.4. Project Schedules and Weights</h2>
+<div class="para" id="SS4.p1"><table align="center" class="tabular"><tbody class="tbody">
+<tr class="tr">
+<td align="center" class="td l r t">Phase</td>
+<td align="center" class="td r t">Functional Layer</td>
+<td align="center" class="td r t">Weight</td>
+<td align="center" class="td r t">Due date</td>
+</tr>
+<tr class="tr">
+<td align="center" class="td l r tt">Part I</td>
+<td align="center" class="td r tt">Buffer Pool (BF) Layer</td>
+<td align="center" class="td r tt">5%</td>
+<td align="center" class="td r tt">Apr/11/2017, Tuesday</td>
+</tr>
+<tr class="tr">
+<td align="center" class="td l r">Part II</td>
+<td align="center" class="td r">Paged File (PF) Layer</td>
+<td align="center" class="td r">10%</td>
+<td align="center" class="td r">Apr/11/2017, Tuesday</td>
+</tr>
+<tr class="tr">
+<td align="center" class="td l r">Part III</td>
+<td align="center" class="td r">Heap File (HF) Layer</td>
+<td align="center" class="td r">10%</td>
+<td align="center" class="td r">May/23/2017, Tuesday</td>
+</tr>
+<tr class="tr">
+<td align="center" class="td l r">Part IV</td>
+<td align="center" class="td r">Access Method (AM) Layer</td>
+<td align="center" class="td r">15%</td>
+<td align="center" class="td r">May/23/2017, Tuesday</td>
+</tr>
+<tr class="tr">
+<td align="center" class="td l r">Part V</td>
+<td align="center" class="td r">Front-End (FE) Layer</td>
+<td align="center" class="td r">+15%</td>
+<td align="center" class="td r">TBA</td>
+</tr>
+<tr class="tr">
+<td align="center" class="td b l r">Optional</td>
+<td align="center" class="td b r">Benchmarking</td>
+<td align="center" class="td b r">+5%</td>
+<td align="center" class="td b r">TBA</td>
+</tr>
+</tbody></table></div>
+</div>
+<div class="subsection" id="SS5">
+<h2 class="title subsection-title">§ 1.5. Submission and Grading Policy</h2>
+<div class="para" id="SS5.p1"><p class="p">Each part of the project must be submitted electronically at the SNU eTL site.
+<span style="" class="text italic">No paper copies nor email submission</span> will be accepted.
+If your code has more than one source file, submit them as a single .zip
+or .tar archive (<span style="" class="text italic">e.g.</span>, <span style="" class="text typewriter">XX.tar</span>), so that TA can download it quickly.</p></div>
+<div class="para" id="SS5.p2"><p class="p">Each part of the project is due by <span style="" class="text bold">11:00pm</span> on the specified date.
+An electronic copy report for each part is also due at the same time.
+A late project may be turned in within 24 hours after the deadline
+for a 10% penalty (<span style="" class="text italic">i.e.</span>, 10% deduction of your credits).
+<span style="" class="text italic">No project late for more than 24 hours</span> will be accepted unless
+a valid excuse (<span style="" class="text italic">e.g.</span>, documented illness or family emergency) is given
+to the instructor prior to the due date.
+<span style="text-decoration:underline; " class="text">For fairness, this policy will be strictly enforced.</span></p></div>
+<div class="para" id="SS5.p3"><p class="p">Your code will be tested and graded only on a <span style="" class="text bold">Linux</span> platform
+to verify/evaluate its completeness, correctness and efficiency.
+Be certain that your program runs correctly on a Linux platform
+before you submit it.
+Testing your code thoroughly before turning in is very important,
+as even a small bug arising early in a test script can result in
+subsequent tests failing (and hence, a poor grade).
+In cases where a <span style="" class="text italic">simple fix</span> (<span style="" class="text italic">i.e.</span>, several lines of code at most)
+can help a project make it through later parts of a test script,
+re-grading will be allowed.
+Such re-grading, however, will incur a 10% penalty
+(<span style="" class="text italic">i.e.</span>, 10% deduction of your credits after re-grading).
+Thus, in order to get full credit for your work, you must do a good job
+of testing your project before you turn it in.
+We will decide which changes constitute a simple fix.
+A non-working project may be turned in for partial credits.</p></div>
+<div class="para" id="SS5.p4"><p class="p">Except for special circumstances, all the members in a group will receive
+an identical grade for each part of the project.
+Project demonstration may be administered shortly after the final stage
+of the project. If we decide to do it, all group members will be required
+to attend the demonstration. One of the purposes of project demonstration will
+be to determine whether all the group members were indeed equal participants
+in the project.
+If it is obvious at the time that any group member did significantly
+more work than others, we may adjust your grades accordingly
+up to the full 100% in extreme cases. Please do not make us do this.</p></div>
+</div>
+<div class="subsection" id="SS6">
+<h2 class="title subsection-title">§ 1.6. Benchmarking</h2>
+<div class="para" id="SS6.p1"><p class="p">Benchmarking a database server is an important part of server development.
+Considerable time is routinely devoted to
+fine tuning a database engine and extracting better performance out of it.
+You will be given a sample database and a suite of queries based on
+the Wisconsin benchmark. Performance of your <span style="" class="text smallcaps">MiniRel</span> system will be
+measured for the queries with respect to both computation and I/O.
+</p></div>
+<div class="para" id="SS6.p2"><p class="p">You can get full credits for this part of the <span style="" class="text smallcaps">MiniRel</span> project
+if your <span style="" class="text smallcaps">MiniRel</span> system yields <span style="" class="text italic">more than just acceptable</span> performance
+from the benchmark.
+For example, no more than 20% slower than
+our own implementation or among the top three contenders.
+
+</p></div>
+</div>
+</div>
+        </div>
+    <div class="footer">March 7, 2017<a href="minirel-web.html" title="" class="ref previous">?</a><a href="S2.html" title="§2. The Buffer Pool (BF) Layer" class="ref next">§2 The Buffer Pool (BF) Layer</a>
+      </div>
+      </div>
+    </body>
+</html>

@@ -1,0 +1,275 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3c.org/TR/html4/strict.dtd">
+<html>
+  <head>
+    <title>The Paged File (PF) Layer in </title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <link rel="start" href="minirel-web.html" title="">
+    <link rel="prev" href="S2.html" title="§2. The Buffer Pool (BF) Layer">
+    <link rel="stylesheet" type="text/css" href="core.css">
+  </head>
+  <body>
+    <div class="navbar">
+<a href="minirel-web.html" title="" class="ref start">?</a>
+  <ul class="toc">
+  <li class="tocentry" id=""><a href="S1.html" title="§1. Introduction" class="ref toc">§1 Introduction</a></li>
+  <li class="tocentry" id=""><a href="S2.html" title="§2. The Buffer Pool (BF) Layer" class="ref toc">§2 The Buffer Pool (BF) Layer</a></li>
+  <li class="tocentry self" id="">
+<span class="ref toc here">§3 The Paged File (PF) Layer</span>
+  <ul class="toc">
+  <li class="tocentry" id=""><a href="#SS1" title="§3.1. Data Structures in §3. The Paged File (PF) Layer" class="ref toc">§3.1 Data Structures</a></li>
+  <li class="tocentry" id=""><a href="#SS2" title="§3.2. PF Interface Routines in §3. The Paged File (PF) Layer" class="ref toc">§3.2 PF Interface Routines</a></li>
+  <li class="tocentry" id=""><a href="#SS3" title="§3.3. Implementation Notes in §3. The Paged File (PF) Layer" class="ref toc">§3.3 Implementation Notes</a></li>
+    </ul>
+</li>
+    </ul>
+      </div>
+    <div class="main">
+    <div class="header">
+<a href="minirel-web.html" title="" class="ref up">?</a><a href="S2.html" title="§2. The Buffer Pool (BF) Layer" class="ref previous">§2 The Buffer Pool (BF) Layer</a>
+      </div>
+    <div class="content">
+<div class="section" id="">
+<h1 class="title section-title">§ 3. The Paged File (PF) Layer</h1>
+<div class="para" id="p1"><p class="p">The Paged File (PF) layer provides facilities to allow client layers
+to do file I/O in terms of pages. Interface functions should be provided
+to create, open and close files; to scan through a given file;
+to read a specific page of a given file;
+and to add new pages to a given file.
+Currently, the PF layer does not support deleting pages from a given file.</p></div>
+<div class="subsection" id="SS1">
+<h2 class="title subsection-title">§ 3.1. Data Structures</h2>
+<div class="para" id="SS1.p1">
+<p class="p">As files are opened, the PF layer needs to keep track of each one of them.
+This is done through the <span style="" class="text italic">PF file table</span>.
+The PF file table has a maximum of <span style="" class="text typewriter">PF_FTAB_SIZE</span> entries.
+When a file is open, an entry in the table is assigned to it.
+This index in the table is called the <span style="" class="text italic">PF file descriptor</span>.
+Note that this descriptor should not be confused with the UNIX
+file descriptor associated with a file.
+The structure of a file table entry may look like the following.
+<span style="" class="text small"></span></p>
+<blockquote class="quote"><pre class="verbatim">
+typedef struct PFftab_ele {
+    bool_t    valid;       /* set to TRUE when a file is open. */
+    ino_t     inode;       /* inode number of the file         */
+    char      *fname;      /* file name                        */
+    int       unixfd;      /* Unix file descriptor             */
+    PFhdr_str hdr;         /* file header                      */
+    short     hdrchanged;  /* TRUE if file header has changed  */
+} PFftab_ele;
+</pre></blockquote>
+</div>
+<div class="para" id="SS1.p2">
+<p class="p">Each PF file is implemented by using a UNIX file,
+and organized as a <span style="" class="text italic">file header</span> and a series of data pages.
+
+The structure definition of the file header and data pages can be
+as simple as the following.
+<span style="" class="text small"></span></p>
+<blockquote class="quote"><pre class="verbatim">
+typedef struct PFhdr_str {
+    int    numpages;      /* number of pages in the file */
+} PFhdr_str;
+</pre></blockquote>
+<blockquote class="quote"><pre class="verbatim">
+typedef struct PFpage {
+    char pagebuf[PAGE_SIZE];
+} PFpage;
+</pre></blockquote>
+<p class="p">The constant <span style="" class="text typewriter">PAGE_SIZE</span> specifies the number of bytes
+available to store data on each page.
+It is typically a multiple of a disk sector size.</p>
+</div>
+</div>
+<div class="subsection" id="SS2">
+<h2 class="title subsection-title">§ 3.2. PF Interface Routines</h2>
+<div class="para" id="SS2.p1"><p class="p">The functions associated with paged file management are described
+in this section. These are the functions you are expected to use
+in the design of the HF and AM layers.
+</p></div>
+<div class="para" id="SS2.p2"><ul class="itemize" id="">
+<li class="item" id="I4.i1"><div class="para" id="I4.i1.p1"><p class="p"><span style="" class="text bold">void PF_Init(void)</span><br class="break">This function initializes the PF layer.
+It invokes <span style="" class="text typewriter">BF_Init()</span> and initializes the file table.
+This must be the first function to call in order to use th PF layer.
+There is no return value.</p></div></li>
+<li class="item" id="I4.i2"><div class="para" id="I4.i2.p1">
+<p class="p"><span style="" class="text bold">int PF_CreateFile (char *filename)</span></p>
+<pre class="verbatim">
+     char     *filename;    /* name of file to be created */
+</pre>
+<p class="p">This function creates a file named <span style="" class="text typewriter">filename</span>.
+This file should not have already existed.
+The system call <span style="" class="text typewriter">open()</span> is used to create the file,
+the PF file header is initialized and written to the file,
+and the file is closed using the <span style="" class="text typewriter">close()</span> system call.
+This function returns <span style="" class="text typewriter">PFE_OK</span> if the operation is successful,
+an error condition otherwise.</p>
+</div></li>
+<li class="item" id="I4.i3"><div class="para" id="I4.i3.p1">
+<p class="p"><span style="" class="text bold">int PF_DestroyFile (char *filename)</span></p>
+<pre class="verbatim">
+     char     *filename;    /* name of file to be destroyed */
+</pre>
+<p class="p">This function destroys the file <span style="" class="text typewriter">filename</span>.
+The file should have existed, and should not be already open.
+This function returns <span style="" class="text typewriter">PFE_OK</span> if the operation is successful,
+an error condition otherwise.</p>
+</div></li>
+<li class="item" id="I4.i4"><div class="para" id="I4.i4.p1">
+<p class="p"><span style="" class="text bold">int PF_OpenFile (char *filename)</span></p>
+<pre class="verbatim">
+     char     *filename;    /* name of the file to be opened */
+</pre>
+<p class="p">This function opens the file named <span style="" class="text typewriter">filename</span>
+using the system call <span style="" class="text typewriter">open()</span>,
+and reads in the file header.
+Then, the fields in the file table entry are filled accordingly
+and the index of the file table entry is returned.
+<span style="" class="text italic">This is the PF file descriptor.</span>
+
+This function returns a PF file descriptor if the operation is successful,
+an error condition otherwise.</p>
+</div></li>
+<li class="item" id="I4.i5"><div class="para" id="I4.i5.p1">
+<p class="p"><span style="" class="text bold">int PF_CloseFile (int fd)</span></p>
+<pre class="verbatim">
+     int     fd;           /* PF file descriptor */
+</pre>
+<p class="p">This function closes the file associated with PF file descriptor <span style="" class="text typewriter">fd</span>.
+This entailes releasing all the buffer pages belonging to the file
+from the LRU list to the free list.
+Meanwhile, dirty pages must be written back to the file if any.
+All the buffer pages of a file must have been unpinned
+in order for the file to be closed successfully.
+If the file header has changed, it is written back to the file.
+The file is finally closed by using the system call <span style="" class="text typewriter">close()</span>.
+The file table entry corresponding to the file is freed.
+This function returns <span style="" class="text typewriter">PFE_OK</span> if the operation is successful,
+an error condition otherwise.</p>
+</div></li>
+<li class="item" id="I4.i6"><div class="para" id="I4.i6.p1">
+<p class="p"><span style="" class="text bold">int  PF_AllocPage (int fd, int *pageNum, char **pagebuf)</span></p>
+<pre class="verbatim">
+     int     fd;          /* PF file descriptor */
+     int     *pageNum;    /* return the number of the page allocated */
+     char    **pagebuf;   /* return a pointer to the page content */
+</pre>
+<p class="p">This function allocates a page in the file associated with a file
+descriptor <span style="" class="text typewriter">fd</span>. This new page is appended to the end of the file.
+This function also allocates a buffer entry corresponding to the new page.
+The value of <span style="" class="text typewriter">pageNum</span> for the page being allocated
+must be determined from the information stored in the file header.
+The page allocated by this function is pinned and marked dirty
+so that it will be written to the file eventually.
+Upon a successful page allocation, the file header must be updated accordingly.
+This function returns <span style="" class="text typewriter">PFE_OK</span> if the operation is successful,
+an error condition otherwise.</p>
+</div></li>
+<li class="item" id="I4.i7"><div class="para" id="I4.i7.p1">
+<p class="p"><span style="" class="text bold">int  PF_GetNextPage (int fd, int *pageNum, char **pagebuf)</span></p>
+<pre class="verbatim">
+     int     fd;            /* PF file descriptor */
+     int     *pageNum;      /* return the number of the next page */
+     char    **pagebuf;     /* return a pointer to the page content */
+</pre>
+<p class="p">This function gets the page right after the one referred to by <span style="" class="text typewriter">pageNum</span>
+in the file associated with file descriptor <span style="" class="text typewriter">fd</span>.
+The <span style="" class="text typewriter">pageNum</span> of the next page will be just one more than the current page
+unless something unusual has happened.
+
+The <span style="" class="text typewriter">pagebuf</span> argument points to the content of the PF data page.
+This function returns <span style="" class="text typewriter">PFE_OK</span> if the operation is successful,
+<span style="" class="text typewriter">PFE_EOF</span> if the end of file is reached without finding
+any valid page,
+a PF error code otherwise.</p>
+</div></li>
+<li class="item" id="I4.i8"><div class="para" id="I4.i8.p1">
+<p class="p"><span style="" class="text bold">int PF_GetFirstPage(int fd, int *pageNum, char **pagebuf)</span></p>
+<pre class="verbatim">
+     int     fd;            /* PF file descriptor */
+     int     *pageNum;      /* return the number of the first page */
+     char    **pagebuf;     /* return a pointer to the page content */
+</pre>
+<p class="p">This function gets the first valid page
+in the file associated with file descriptor <span style="" class="text typewriter">fd</span>.
+This function is implemented using <span style="" class="text typewriter">PF_GetNextPage()</span>
+by passing <span style="" class="text typewriter">-1</span> for the <span style="" class="text typewriter">pageNum</span> argument.
+It returns <span style="" class="text typewriter">PFE_OK</span> if the operation is successful,
+<span style="" class="text typewriter">PFE_EOF</span> if the end of file is reached without finding
+any valid page, a PF error code otherwise.</p>
+</div></li>
+<li class="item" id="I4.i9"><div class="para" id="I4.i9.p1">
+<p class="p"><span style="" class="text bold">int PF_GetThisPage (int fd, int pageNum, char **pagebuf) </span></p>
+<pre class="verbatim">
+     int     fd;            /* PF file descriptor */
+     int     pageNum;       /* number of page to retrieve */
+     char    **pagebuf;     /* return the content of the page data */
+</pre>
+<p class="p">This function reads a <span style="" class="text italic">valid</span> page specified by <span style="" class="text typewriter">pageNum</span>
+from the file associated with file descriptor <span style="" class="text typewriter">fd</span>,
+and sets <span style="" class="text typewriter">*pagebuf</span> to point to the page data.
+If the page specified by <span style="" class="text typewriter">pageNum</span> is not valid
+(<span style="" class="text italic">e.g.</span>, <span style="" class="text typewriter">pageNum</span> no smaller than the total number of pages in the file),
+an error code <span style="" class="text typewriter">PFE_INVALIDPAGE</span> is returned.
+It returns <span style="" class="text typewriter">PFE_OK</span> if the operation is successful,
+and a PF error code otherwise.</p>
+</div></li>
+<li class="item" id="I4.i10"><div class="para" id="I4.i10.p1">
+<p class="p"><span style="" class="text bold">int PF_DirtyPage(int fd, int pageNum)</span></p>
+<pre class="verbatim">
+     int     fd;            /* PF file descriptor */
+     int     pageNum;       /* number of page to be marked dirty */
+</pre>
+<p class="p">After checking the validity of the <span style="" class="text typewriter">fd</span> and <span style="" class="text typewriter">pageNum</span> values,
+this function marks the page associated with <span style="" class="text typewriter">pageNum</span> and <span style="" class="text typewriter">fd</span> dirty.
+It returns <span style="" class="text typewriter">PFE_OK</span> if the operation is successful,
+an error condition otherwise.</p>
+</div></li>
+<li class="item" id="I4.i11"><div class="para" id="I4.i11.p1">
+<p class="p"><span style="" class="text bold">int PF_UnpinPage(int fd, int pageNum, int dirty)</span></p>
+<pre class="verbatim">
+     int     fd;            /* PF file descriptor */
+     int     pageNum;       /* number of page to be unpinned */
+     int     dirty;         /* dirty indication */
+</pre>
+<p class="p">After checking the validity of the <span style="" class="text typewriter">fd</span> and <span style="" class="text typewriter">pageNum</span> values,
+this function unpins the page numbered <span style="" class="text typewriter">pageNum</span> of the file
+with file descriptor <span style="" class="text typewriter">fd</span>.
+Besides, if the argument <span style="" class="text typewriter">dirty</span> is TRUE, the page is marked dirty.
+This function returns <span style="" class="text typewriter">PFE_OK</span> if the operation is successful,
+an error condition otherwise.</p>
+</div></li>
+</ul></div>
+</div>
+<div class="subsection" id="SS3">
+<h2 class="title subsection-title">§ 3.3. Implementation Notes</h2>
+<div class="para" id="SS3.p1"><p class="p">The PF layer implements a paged file manager that allows you to access
+pages of a file in random or sequential order, to pin pages in the buffer
+while they are being used, and to unpin them when they are not needed.
+The functions <span style="" class="text typewriter">PF_AllocPage</span>, <span style="" class="text typewriter">PF_GetThisPage</span>,
+<span style="" class="text typewriter">PF_GetFirstPage</span>, and <span style="" class="text typewriter">PF_GetNextPage</span> get a page and
+pin it in the buffer.
+The <span style="" class="text typewriter">PF_UnpinPage</span> function can be used to unpin a page.
+It is allowed to pin the same page more than once (without unpinning it).
+The first call to a <span style="" class="text typewriter">PF_GetXxxxPage</span> function will pin a page
+in the buffer pool, and set a pin counter for that page to one.
+Subsequent calls to get the same page will simply increment the pin counter.
+A call to <span style="" class="text typewriter">PF_UnpinPage</span> will decrement the counter,
+and the page will actually be unpinned only when the count drops to zero.</p></div>
+<div class="para" id="SS3.p2"><p class="p">Thus, it is important that
+<span style="" class="text italic">each time you get a page, you do not forget to unpin it</span>.
+If you fail to unpin the page, the buffer pool will slowly fill up,
+and the performance of the system will get worse and worse, until you
+can no longer get more pages at all (at which point the PF layer will
+return an error code for any <span style="" class="text typewriter">PF_GetXxxxPage</span> function).
+The <span style="" class="text typewriter">PF_CloseFile</span> call will fail if there are any pages of the file
+pinned in the buffer, so it is possible to determine whether this
+is the case or not.</p></div>
+</div>
+</div>
+        </div>
+    <div class="footer">March 7, 2017<a href="S2.html" title="§2. The Buffer Pool (BF) Layer" class="ref previous">§2 The Buffer Pool (BF) Layer</a>
+      </div>
+      </div>
+    </body>
+</html>

@@ -1,0 +1,280 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3c.org/TR/html4/strict.dtd">
+<html>
+  <head>
+    <title>The Buffer Pool (BF) Layer in </title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <link rel="start" href="minirel-web.html" title="">
+    <link rel="prev" href="S1.html" title="§1. Introduction">
+    <link rel="next" href="S3.html" title="§3. The Paged File (PF) Layer">
+    <link rel="stylesheet" type="text/css" href="core.css">
+  </head>
+  <body>
+    <div class="navbar">
+<a href="minirel-web.html" title="" class="ref start">?</a>
+  <ul class="toc">
+  <li class="tocentry" id=""><a href="S1.html" title="§1. Introduction" class="ref toc">§1 Introduction</a></li>
+  <li class="tocentry self" id="">
+<span class="ref toc here">§2 The Buffer Pool (BF) Layer</span>
+  <ul class="toc">
+  <li class="tocentry" id=""><a href="#SS1" title="§2.1. Data Structures in §2. The Buffer Pool (BF) Layer" class="ref toc">§2.1 Data Structures</a></li>
+  <li class="tocentry" id=""><a href="#SS2" title="§2.2. BF Interface Routines in §2. The Buffer Pool (BF) Layer" class="ref toc">§2.2 BF Interface Routines</a></li>
+  <li class="tocentry" id="">
+<a href="#SS3" title="§2.3. Implementation Notes in §2. The Buffer Pool (BF) Layer" class="ref toc">§2.3 Implementation Notes</a>
+  <ul class="toc">
+  <li class="tocentry" id=""><a href="#SS3.SSS1" title="§2.3.1. Pinning buffer pages in §2.3. Implementation Notes in §2. The Buffer Pool (BF) Layer" class="ref toc">§2.3.1 Pinning buffer pages</a></li>
+  <li class="tocentry" id=""><a href="#SS3.SSS2" title="§2.3.2. Error handling in §2.3. Implementation Notes in §2. The Buffer Pool (BF) Layer" class="ref toc">§2.3.2 Error handling</a></li>
+    </ul>
+</li>
+    </ul>
+</li>
+  <li class="tocentry" id=""><a href="S3.html" title="§3. The Paged File (PF) Layer" class="ref toc">§3 The Paged File (PF) Layer</a></li>
+    </ul>
+      </div>
+    <div class="main">
+    <div class="header">
+<a href="minirel-web.html" title="" class="ref up">?</a><a href="S1.html" title="§1. Introduction" class="ref previous">§1 Introduction</a><a href="S3.html" title="§3. The Paged File (PF) Layer" class="ref next">§3 The Paged File (PF) Layer</a>
+      </div>
+    <div class="content">
+<div class="section" id="">
+<h1 class="title section-title">§ 2. The Buffer Pool (BF) Layer</h1>
+<div class="para" id="p1"><p class="p">Access to data on a page of a file involves reading the page
+into the buffer pool in main memory and then manipulating
+(<span style="" class="text italic">e.g.</span>, reading or updating) it there. While a page is in memory and
+available for manipulation, it is said to be <span style="" class="text italic">pinned</span> in the buffer pool.
+Such a page must be explicitly <span style="" class="text italic">unpinned</span> when the client is done
+manipulating it in order to make room for future pages and to ensure
+that updates are reflected back to the appropriate page on disk.
+<span style="" class="text italic">A page is identified by a file it belongs to and its page number</span>,
+which is effectively its relative location within the file.</p></div>
+<div class="para" id="p2"><p class="p">Most of the interface routines return an integer value, with a negative value
+meaning that an error has occurred.
+There are a number of <span style="" class="text italic">possible</span> BF error codes that can be returned;
+these are described in this section and <span style="" class="text typewriter">bf.h</span> file
+in the public directory <span style="" class="text typewriter">$MINIREL_HOME/h</span>.</p></div>
+<div class="subsection" id="SS1">
+<h2 class="title subsection-title">§ 2.1. Data Structures</h2>
+<div class="figure" id="F2">
+<img src="x2.png" width="469" height="266" class="graphics centering" alt=""><div class="caption centering">
+      Figure 2. <span style="" class="text bold">Data Structures for Buffer Pool Management</span>
+</div>
+<p class="p"><span style="background:black; " class="rule"> </span></p>
+</div>
+<div class="para" id="SS1.p1"><p class="p">The buffer pool is a doubly linked <span style="" class="text italic">LRU</span> list of buffer page structures,
+each one corresponding to a PF file page, as shown in the top left of
+Figure <a href="#F2" title="Fig.2 in §2.1. Data Structures in §2. The Buffer Pool (BF) Layer" class="ref">2</a>.  As pages are requested
+from a client, they are brought to the buffer pool. If a page is already
+in the buffer then the request is satisfied immediately without
+reading the file.  If a page needs to be read from disk
+and the maximum number of pages has already been allocated in the buffer
+(the maximum number is determined by <span style="" class="text typewriter">BF_MAX_BUFS</span>),
+then a page must be chosen as victim from the LRU list.
+Its content has to be written back to disk (in case it is <span style="" class="text italic">dirty</span>)
+and then the buffer entry would be reused for the page to be read.
+The victim page is chosen by going backward from
+the last (<span style="" class="text italic">i.e.</span>, least recently used) buffer page.
+The allocated page is put at the beginning of the buffer.
+If all the pages in the LRU list are pinned and the list has the maximum
+number of pages allowed, then an error condition must be returned.
+The structure of a buffer entry may be defined as follows.</p></div>
+<div class="para" id="SS1.p2">
+<blockquote class="quote"><pre class="verbatim">
+typedef struct BFpage {
+  PFpage         fpage;       /* page data from the file                 */
+  struct BFpage  *nextpage;   /* next in the linked list of buffer pages */
+  struct BFpage  *prevpage;   /* prev in the linked list of buffer pages */
+  bool_t         dirty;       /* TRUE if page is dirty                   */
+  short          count;       /* pin count associated with the page      */
+  int            pageNum;     /* page number of this page                */
+  int            fd;          /* PF file descriptor of this page         */
+} BFpage;
+</pre></blockquote>
+<p class="p">A free list of <span style="" class="text typewriter">BFpage</span> structures is also maintained by
+the buffer manager. <span style="" class="text typewriter">BFpage</span> entries are returned to this list
+in situations like when the PF pages of a file are released from the buffer.
+
+</p>
+</div>
+<div class="para" id="SS1.p3"><p class="p">A <span style="" class="text italic">hash table</span> is commonly used in order to locate the buffer entry in
+the buffer pool corresponding to a PF file page. The value used to hash is
+the <span style="" class="text typewriter">fd</span> and <span style="" class="text typewriter">pageNum</span> of the PF file page of interest.
+The <span style="" class="text typewriter">fd</span> value is not the Unix file descriptor but the PF file descriptor
+(index in the PF file table).
+The hash table has a size of <span style="" class="text typewriter">BF_HASH_TBL_SIZE</span>
+and each bucket entry is a pointer to a hash node,
+whose structure may be defined as follows.
+See the bottom of Figure <a href="#F2" title="Fig.2 in §2.1. Data Structures in §2. The Buffer Pool (BF) Layer" class="ref">2</a> for illustration.</p></div>
+<div class="para" id="SS1.p4"><blockquote class="quote"><pre class="verbatim">
+typedef struct BFhash_entry {
+  struct BFhash_entry *nextentry;     /* next hash table element or NULL */
+  struct BFhash_entry *preventry;     /* prev hash table element or NULL */
+  int fd;                             /* file descriptor                 */
+  int pageNum;                        /* page number                     */
+  struct BFpage *bpage;               /* ptr to buffer holding this page */
+} BFhash_entry;
+</pre></blockquote></div>
+</div>
+<div class="subsection" id="SS2">
+<h2 class="title subsection-title">§ 2.2. BF Interface Routines</h2>
+<div class="para" id="SS2.p1">
+<p class="p">The functions associated with buffer pool management are described below.
+You are expected to use these functions to design the PF layer, which sits
+right on top of the BF layer in the <span style="" class="text smallcaps">MiniRel</span> architecture.
+Most of the BF functions communicate with the PF layer via
+a buffer request control block <span style="" class="text typewriter">BFreq</span>, which is shown below
+and defined in <span style="" class="text typewriter">minirel.h</span> in the public directory <span style="" class="text typewriter">$MINIREL_HOME/h</span>.
+<span style="" class="text small"></span></p>
+<blockquote class="quote"><pre class="verbatim">
+typedef struct _buffer_request_control {
+    int         fd;                     /* PF file descriptor */
+    int         unixfd;                 /* Unix file descriptor */
+    int         pagenum;                /* Page number in the file */
+    bool_t      dirty;                  /* TRUE if page is dirty */
+} BFreq;
+</pre></blockquote>
+</div>
+<div class="para" id="SS2.p2"><ul class="itemize" id="">
+<li class="item" id="I3.i1"><div class="para" id="I3.i1.p1"><p class="p"><span style="" class="text bold">void BF_Init(void)</span><br class="break">This function initializes the BF layer.
+Specifically, it creates all the buffer entries and add them to the free list.
+It also intializes the hash table.
+This must be the first function to call in order to use th BF layer.
+No value returns.</p></div></li>
+<li class="item" id="I3.i2"><div class="para" id="I3.i2.p1">
+<p class="p"><span style="" class="text bold">int BF_GetBuf(BFreq bq, PFpage **fpage)</span></p>
+<pre class="verbatim">
+     BFreq   bq;            /* buffer control block */
+     PFpage  **fpage;       /* used to return the page itself */
+</pre>
+<p class="p">This function returns a PF page in a memory block pointed to by <span style="" class="text typewriter">*fpage</span>.
+This memory block stores a file page associated with a PF file descriptor
+and a page number passed over in the buffer control block <span style="" class="text typewriter">bq</span>.
+If the buffer page is already in the buffer pool,
+the pin count of the corresponding buffer entry is incremented by one.
+Otherwise, a new buffer page should be allocated
+(by page replacement if there is no free page in the buffer pool).
+Then, the file page is read into the buffer page,
+its pin count is set to one, and its dirty flag is set to FALSE,
+and other appropriate fields of the buffer entry are set accordingly.
+In both the cases, the page becomes the most recently used.
+This function returns <span style="" class="text typewriter">BFE_OK</span> if the operation is successful,
+an error condition otherwise.
+</p>
+</div></li>
+<li class="item" id="I3.i3">
+<div class="para" id="I3.i3.p1">
+<p class="p"><span style="" class="text bold">int BF_AllocBuf(BFreq bq, PFpage **fpage)</span></p>
+<pre class="verbatim">
+     BFreq   bq;            /* buffer control block */
+     PFgpage **fpage;       /* points to the buffer data */
+</pre>
+</div>
+<div class="para" id="I3.i3.p2"><p class="p">Unlike <span style="" class="text typewriter">BF_GetBuf()</span>, this function is used in situations where
+a <span style="" class="text italic">new</span> page is added to a file. Thus, if there already exists
+a buffer page in the pool associated with a PF file descriptor
+and a page number passed over in the buffer control block <span style="" class="text typewriter">bq</span>,
+a PF error code must be returned.
+Otherwise, a new buffer page should be allocated
+(by page replacement if there is no free page in the buffer pool).
+Then, its pin count is set to one, its dirty flag is set to FALSE,
+other appropriate fields of the <span style="" class="text typewriter">BFpage</span> structure are set accordingly,
+and the page becomes the most recently used.
+Note that it is not necessary to read anything from the file into
+the buffer page, because a brand new page is being appended to the file.
+This function returns <span style="" class="text typewriter">BFE_OK</span> if the operation is successful,
+an error condition otherwise.
+</p></div>
+</li>
+<li class="item" id="I3.i4"><div class="para" id="I3.i4.p1">
+<p class="p"><span style="" class="text bold">int BF_UnpinBuf(BFreq bq)</span></p>
+<pre class="verbatim">
+     BFreq   bq;            /* buffer control block */
+</pre>
+<p class="p">This function unpins the page whose identification is passed over
+in the buffer control block <span style="" class="text typewriter">bq</span>.
+This page must have been pinned in the buffer already.
+Unpinning a page is carried out by decrementing the pin count by one.
+This function returns <span style="" class="text typewriter">BFE_OK</span> if the operation is successful,
+an error condition otherwise.</p>
+</div></li>
+<li class="item" id="I3.i5"><div class="para" id="I3.i5.p1">
+<p class="p"><span style="" class="text bold">int BF_TouchBuf(BFreq bq)</span></p>
+<pre class="verbatim">
+     BFreq   bq;            /* buffer control block */
+</pre>
+<p class="p">This function marks the page identified by the buffer control block <span style="" class="text typewriter">bq</span>
+as dirty. The page must have been pinned in the buffer already.
+The page is also made the most recently used by moving it to the head
+of the LRU list.
+This function returns <span style="" class="text typewriter">BFE_OK</span> if the operation is successful,
+an error condition otherwise.</p>
+</div></li>
+<li class="item" id="I3.i6"><div class="para" id="I3.i6.p1">
+<p class="p"><span style="" class="text bold">int BF_FlushBuf(int fd)</span></p>
+<pre class="verbatim">
+     int     fd;            /* PF file descriptor */
+</pre>
+<p class="p">This function releases all the buffer pages belonging to
+a file with file descriptor <span style="" class="text typewriter">fd</span> from the buffer pool
+by writing any dirty pages to disk
+and returning all of those buffer pages into the free list.
+This function returns <span style="" class="text typewriter">BFE_OK</span> if the operation is successful,
+an error condition otherwise.
+If any page of the file <span style="" class="text typewriter">fd</span> is pinned, an error condition
+must be returned.</p>
+</div></li>
+<li class="item" id="I3.i7"><div class="para" id="I3.i7.p1"><p class="p"><span style="" class="text bold">int BF_ShowBuf(void)</span><br class="break">This is a service function that displays the status of the LRU list.
+It may print such information as the number of pages in the LRU list,
+the identification and the dirty flag of each individual buffer page,
+and so on.</p></div></li>
+</ul></div>
+</div>
+<div class="subsection" id="SS3">
+<h2 class="title subsection-title">§ 2.3. Implementation Notes</h2>
+<div class="subsubsection" id="SS3.SSS1">
+<h3 class="title subsubsection-title">§ 2.3.1. Pinning buffer pages</h3>
+<div class="para" id="SS3.SSS1.p1"><p class="p">Note that unpinning a page does not necessarily cause the page to be
+removed from the buffer;
+an unpinned page is kept in memory as long as its space
+in the buffer pool is not needed.
+If a client needs to read a new page into the memory and there is
+no free space in the buffer pool, the BF layer will choose an unpinned
+page to remove from the pool and will reuse its space.</p></div>
+</div>
+<div class="subsubsection" id="SS3.SSS2">
+<h3 class="title subsubsection-title">§ 2.3.2. Error handling</h3>
+<div class="para" id="SS3.SSS2.p1"><p class="p">In each function, incoming parameters should be checked for validity
+before doing anything. If an error is detected, an error code should be
+returned to the calling function.
+Ideally, it should not be possible for a caller to crash the BF layer
+(or any lower layer) by passing incorrect arguments to an BF layer function.
+In addition to validating parameters on entry, you should check all
+return codes to verify that no errors have occurred in a lower layer.
+If an internal error (an error in a certain layer or one caused by it
+but detected elsewhere) is found, then you should return right away with
+an error code.</p></div>
+<div class="para" id="SS3.SSS2.p2">
+<p class="p">It is a good idea to have a different error code for each different
+kind of error. A list of presumptive error codes is provided for each layer
+in the public directory <span style="" class="text typewriter">$MINIREL_HOME/h</span>.
+Below are a few example error codes defined for the BF layer.</p>
+<blockquote class="quote"><pre class="verbatim">
+#define BFE_OK                   0  /* BF function successful */
+#define BFE_NOMEM               -1  /* No memory can be allocated */
+#define BFE_NOBUF               -2  /* No buffer unit available */
+...
+</pre></blockquote>
+<p class="p">Obviously this list of error codes is not meant to be comprehensive.
+Except for a few documented clearly in the function specifications,
+you can choose to use or not to use any of the error codes.
+Besides, it will be also a good idea to have a function
+(like <span style="" class="text typewriter">BF_PrintError(int errcode)</span>) that decodes an error code
+and prints a human-readable error message for convenience.</p>
+</div>
+</div>
+</div>
+</div>
+        </div>
+    <div class="footer">March 7, 2017<a href="S1.html" title="§1. Introduction" class="ref previous">§1 Introduction</a><a href="S3.html" title="§3. The Paged File (PF) Layer" class="ref next">§3 The Paged File (PF) Layer</a>
+      </div>
+      </div>
+    </body>
+</html>

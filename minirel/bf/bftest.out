@@ -1,0 +1,351 @@
+
+************* Starting testbf1 *************
+
+******** file1 opened for write ***********
+allocated page: fd=10, pagenum=0
+allocated page: fd=10, pagenum=1
+allocated page: fd=10, pagenum=2
+allocated page: fd=10, pagenum=3
+allocated page: fd=10, pagenum=4
+allocated page: fd=10, pagenum=5
+allocated page: fd=10, pagenum=6
+allocated page: fd=10, pagenum=7
+allocated page: fd=10, pagenum=8
+allocated page: fd=10, pagenum=9
+allocated page: fd=10, pagenum=10
+allocated page: fd=10, pagenum=11
+allocated page: fd=10, pagenum=12
+allocated page: fd=10, pagenum=13
+allocated page: fd=10, pagenum=14
+allocated page: fd=10, pagenum=15
+allocated page: fd=10, pagenum=16
+allocated page: fd=10, pagenum=17
+allocated page: fd=10, pagenum=18
+allocated page: fd=10, pagenum=19
+allocated page: fd=10, pagenum=20
+allocated page: fd=10, pagenum=21
+allocated page: fd=10, pagenum=22
+allocated page: fd=10, pagenum=23
+allocated page: fd=10, pagenum=24
+allocated page: fd=10, pagenum=25
+allocated page: fd=10, pagenum=26
+allocated page: fd=10, pagenum=27
+allocated page: fd=10, pagenum=28
+allocated page: fd=10, pagenum=29
+allocated page: fd=10, pagenum=30
+allocated page: fd=10, pagenum=31
+allocated page: fd=10, pagenum=32
+allocated page: fd=10, pagenum=33
+allocated page: fd=10, pagenum=34
+allocated page: fd=10, pagenum=35
+allocated page: fd=10, pagenum=36
+allocated page: fd=10, pagenum=37
+allocated page: fd=10, pagenum=38
+allocated page: fd=10, pagenum=39
+allocated page: fd=10, pagenum=40
+allocated page: fd=10, pagenum=41
+allocated page: fd=10, pagenum=42
+allocated page: fd=10, pagenum=43
+allocated page: fd=10, pagenum=44
+allocated page: fd=10, pagenum=45
+allocated page: fd=10, pagenum=46
+allocated page: fd=10, pagenum=47
+allocated page: fd=10, pagenum=48
+allocated page: fd=10, pagenum=49
+allocated page: fd=10, pagenum=50
+allocated page: fd=10, pagenum=51
+allocated page: fd=10, pagenum=52
+allocated page: fd=10, pagenum=53
+allocated page: fd=10, pagenum=54
+allocated page: fd=10, pagenum=55
+allocated page: fd=10, pagenum=56
+allocated page: fd=10, pagenum=57
+allocated page: fd=10, pagenum=58
+allocated page: fd=10, pagenum=59
+allocated page: fd=10, pagenum=60
+allocated page: fd=10, pagenum=61
+allocated page: fd=10, pagenum=62
+allocated page: fd=10, pagenum=63
+allocated page: fd=10, pagenum=64
+allocated page: fd=10, pagenum=65
+allocated page: fd=10, pagenum=66
+allocated page: fd=10, pagenum=67
+allocated page: fd=10, pagenum=68
+allocated page: fd=10, pagenum=69
+allocated page: fd=10, pagenum=70
+allocated page: fd=10, pagenum=71
+allocated page: fd=10, pagenum=72
+allocated page: fd=10, pagenum=73
+allocated page: fd=10, pagenum=74
+allocated page: fd=10, pagenum=75
+allocated page: fd=10, pagenum=76
+allocated page: fd=10, pagenum=77
+allocated page: fd=10, pagenum=78
+allocated page: fd=10, pagenum=79
+The buffer pool content:
+pageNum	fd	unixfd	count	dirty
+79	10	3	0	1
+78	10	3	0	1
+77	10	3	0	1
+76	10	3	0	1
+75	10	3	0	1
+74	10	3	0	1
+73	10	3	0	1
+72	10	3	0	1
+71	10	3	0	1
+70	10	3	0	1
+69	10	3	0	1
+68	10	3	0	1
+67	10	3	0	1
+66	10	3	0	1
+65	10	3	0	1
+64	10	3	0	1
+63	10	3	0	1
+62	10	3	0	1
+61	10	3	0	1
+60	10	3	0	1
+59	10	3	0	1
+58	10	3	0	1
+57	10	3	0	1
+56	10	3	0	1
+55	10	3	0	1
+54	10	3	0	1
+53	10	3	0	1
+52	10	3	0	1
+51	10	3	0	1
+50	10	3	0	1
+49	10	3	0	1
+48	10	3	0	1
+47	10	3	0	1
+46	10	3	0	1
+45	10	3	0	1
+44	10	3	0	1
+43	10	3	0	1
+42	10	3	0	1
+41	10	3	0	1
+40	10	3	0	1
+
+ ********** written file being closed **********
+The buffer pool content:
+empty
+
+ ****** Showing the file has been written *****
+-rw-r-----  1 mark  staff  331776 May  7 01:50 file1
+
+ ********* printing file **********
+values from disk page 0: 2 2
+values from disk page 1: 10 0
+values from disk page 2: 10 1
+values from disk page 3: 10 2
+values from disk page 4: 10 3
+values from disk page 5: 10 4
+values from disk page 6: 10 5
+values from disk page 7: 10 6
+values from disk page 8: 10 7
+values from disk page 9: 10 8
+values from disk page 10: 10 9
+values from disk page 11: 10 10
+values from disk page 12: 10 11
+values from disk page 13: 10 12
+values from disk page 14: 10 13
+values from disk page 15: 10 14
+values from disk page 16: 10 15
+values from disk page 17: 10 16
+values from disk page 18: 10 17
+values from disk page 19: 10 18
+values from disk page 20: 10 19
+values from disk page 21: 10 20
+values from disk page 22: 10 21
+values from disk page 23: 10 22
+values from disk page 24: 10 23
+values from disk page 25: 10 24
+values from disk page 26: 10 25
+values from disk page 27: 10 26
+values from disk page 28: 10 27
+values from disk page 29: 10 28
+values from disk page 30: 10 29
+values from disk page 31: 10 30
+values from disk page 32: 10 31
+values from disk page 33: 10 32
+values from disk page 34: 10 33
+values from disk page 35: 10 34
+values from disk page 36: 10 35
+values from disk page 37: 10 36
+values from disk page 38: 10 37
+values from disk page 39: 10 38
+values from disk page 40: 10 39
+values from disk page 41: 10 40
+values from disk page 42: 10 41
+values from disk page 43: 10 42
+values from disk page 44: 10 43
+values from disk page 45: 10 44
+values from disk page 46: 10 45
+values from disk page 47: 10 46
+values from disk page 48: 10 47
+values from disk page 49: 10 48
+values from disk page 50: 10 49
+values from disk page 51: 10 50
+values from disk page 52: 10 51
+values from disk page 53: 10 52
+values from disk page 54: 10 53
+values from disk page 55: 10 54
+values from disk page 56: 10 55
+values from disk page 57: 10 56
+values from disk page 58: 10 57
+values from disk page 59: 10 58
+values from disk page 60: 10 59
+values from disk page 61: 10 60
+values from disk page 62: 10 61
+values from disk page 63: 10 62
+values from disk page 64: 10 63
+values from disk page 65: 10 64
+values from disk page 66: 10 65
+values from disk page 67: 10 66
+values from disk page 68: 10 67
+values from disk page 69: 10 68
+values from disk page 70: 10 69
+values from disk page 71: 10 70
+values from disk page 72: 10 71
+values from disk page 73: 10 72
+values from disk page 74: 10 73
+values from disk page 75: 10 74
+values from disk page 76: 10 75
+values from disk page 77: 10 76
+values from disk page 78: 10 77
+values from disk page 79: 10 78
+values from disk page 80: 10 79
+
+ ********** eof reached **********
+
+ ********* reading file via buffer **********
+values from buffered page 0: 10 0
+values from buffered page 1: 10 1
+values from buffered page 2: 10 2
+values from buffered page 3: 10 3
+values from buffered page 4: 10 4
+values from buffered page 5: 10 5
+values from buffered page 6: 10 6
+values from buffered page 7: 10 7
+values from buffered page 8: 10 8
+values from buffered page 9: 10 9
+values from buffered page 10: 10 10
+values from buffered page 11: 10 11
+values from buffered page 12: 10 12
+values from buffered page 13: 10 13
+values from buffered page 14: 10 14
+values from buffered page 15: 10 15
+values from buffered page 16: 10 16
+values from buffered page 17: 10 17
+values from buffered page 18: 10 18
+values from buffered page 19: 10 19
+values from buffered page 20: 10 20
+values from buffered page 21: 10 21
+values from buffered page 22: 10 22
+values from buffered page 23: 10 23
+values from buffered page 24: 10 24
+values from buffered page 25: 10 25
+values from buffered page 26: 10 26
+values from buffered page 27: 10 27
+values from buffered page 28: 10 28
+values from buffered page 29: 10 29
+values from buffered page 30: 10 30
+values from buffered page 31: 10 31
+values from buffered page 32: 10 32
+values from buffered page 33: 10 33
+values from buffered page 34: 10 34
+values from buffered page 35: 10 35
+values from buffered page 36: 10 36
+values from buffered page 37: 10 37
+values from buffered page 38: 10 38
+values from buffered page 39: 10 39
+values from buffered page 40: 10 40
+values from buffered page 41: 10 41
+values from buffered page 42: 10 42
+values from buffered page 43: 10 43
+values from buffered page 44: 10 44
+values from buffered page 45: 10 45
+values from buffered page 46: 10 46
+values from buffered page 47: 10 47
+values from buffered page 48: 10 48
+values from buffered page 49: 10 49
+values from buffered page 50: 10 50
+values from buffered page 51: 10 51
+values from buffered page 52: 10 52
+values from buffered page 53: 10 53
+values from buffered page 54: 10 54
+values from buffered page 55: 10 55
+values from buffered page 56: 10 56
+values from buffered page 57: 10 57
+values from buffered page 58: 10 58
+values from buffered page 59: 10 59
+values from buffered page 60: 10 60
+values from buffered page 61: 10 61
+values from buffered page 62: 10 62
+values from buffered page 63: 10 63
+values from buffered page 64: 10 64
+values from buffered page 65: 10 65
+values from buffered page 66: 10 66
+values from buffered page 67: 10 67
+values from buffered page 68: 10 68
+values from buffered page 69: 10 69
+values from buffered page 70: 10 70
+values from buffered page 71: 10 71
+values from buffered page 72: 10 72
+values from buffered page 73: 10 73
+values from buffered page 74: 10 74
+values from buffered page 75: 10 75
+values from buffered page 76: 10 76
+values from buffered page 77: 10 77
+values from buffered page 78: 10 78
+values from buffered page 79: 10 79
+The buffer pool content:
+pageNum	fd	unixfd	count	dirty
+79	10	3	0	0
+78	10	3	0	0
+77	10	3	0	0
+76	10	3	0	0
+75	10	3	0	0
+74	10	3	0	0
+73	10	3	0	0
+72	10	3	0	0
+71	10	3	0	0
+70	10	3	0	0
+69	10	3	0	0
+68	10	3	0	0
+67	10	3	0	0
+66	10	3	0	0
+65	10	3	0	0
+64	10	3	0	0
+63	10	3	0	0
+62	10	3	0	0
+61	10	3	0	0
+60	10	3	0	0
+59	10	3	0	0
+58	10	3	0	0
+57	10	3	0	0
+56	10	3	0	0
+55	10	3	0	0
+54	10	3	0	0
+53	10	3	0	0
+52	10	3	0	0
+51	10	3	0	0
+50	10	3	0	0
+49	10	3	0	0
+48	10	3	0	0
+47	10	3	0	0
+46	10	3	0	0
+45	10	3	0	0
+44	10	3	0	0
+43	10	3	0	0
+42	10	3	0	0
+41	10	3	0	0
+40	10	3	0	0
+
+ ********** eof reached **********
+The buffer pool content:
+empty
+
+ ****** Showing the file has been written *****
+-rw-r-----  1 mark  staff  331776 May  7 01:50 file1
+
+************* End testbf1 ******************
