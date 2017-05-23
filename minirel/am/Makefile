@@ -5,7 +5,7 @@ INCS	=
 SRCS	= am.c
 TESTS	= amtest.c
 OBJS	= ${SRCS:.c=.o}
-LIBS	= lib${LIB}.a ../pf/libpf.a ../hf/libhf.a ../bf/libbf.a
+LIBS	= lib${LIB}.a ../hf/libhf.a ../pf/libpf.a ../bf/libbf.a
 
 #############################################################################
 # This macro definition can be overwritten by command-line definitions.
@@ -18,6 +18,15 @@ all: lib${LIB}.a ${LIB}test
 
 ${LIB}test: ${LIB}test.o lib${LIB}.a
 	$(CC) $(CFLAGS) -o $@ $< ${LIBS}
+
+../hf/libhf.a:
+	cd ../hf && $(MAKE)
+
+../pf/libpf.a:
+	cd ../pf && $(MAKE)
+
+../bf/libbf.a:
+	cd ../bf && $(MAKE)
 
 lib${LIB}.a: $(OBJS)
 	ar cr lib${LIB}.a $(OBJS)
