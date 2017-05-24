@@ -5,8 +5,6 @@
 #include "minirel.h"
 #include "hf.h"
 
-#define HF_PrintError printf
-
 #define RECSIZE 80
 #define STRSIZE 80
 #define NUMBER  100
@@ -67,12 +65,6 @@ void hftest1()
      }
   }
 
-/*
-  printf("insert done\n");
-  HF_CloseFile(fd);
-  read_string_recs(FILE1);
-  fd = HF_OpenFile(FILE1);
-*/
   /* Getting the records */
 
   next_recid = HF_GetFirstRec(fd, record);
@@ -228,7 +220,7 @@ int read_string_recs(char *filename)
   /* getting first record */
   recid = HF_GetFirstRec(fd, recbuf);
   if (!HF_ValidRecId(fd,recid)) {
-     HF_PrintError("Problem getting record %d.\n", recid.recnum);
+     HF_PrintError("Problem getting record.\n");
      exit(1);
   }
 
