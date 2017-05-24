@@ -739,6 +739,7 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 	bhdr = (BtrHdr *) pbuf;
 	entries = bhdr->entries;
 
+	printf("Btr_recSplit: currently contains %d entries\n", entries);
 
 	/* at leaf node */
 	if (Btr_isLeaf(pbuf) == TRUE){
@@ -1399,6 +1400,7 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 			printf("Btr_recSplit failed: copying up the mid key value to parent from leaf\n");
 			return err;
 		}
+		printf("Btr_recSplit: value successfully copied up from a leaf node\n");
 		return AME_OK;
 
 	} /* at internal node */
@@ -1408,6 +1410,7 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 		if (entries < amhdr->maxKeys){
 			/* insert the key and ptr at an appropriate position */
 			/* inserting the new value into one of the nodes */
+			printf("Btr_recSplit: internal node not full\n");
 			if ((err = PF_UnpinPage(ait[AM_fd].pfd, adr.pagenum, TRUE)) != PFE_OK){
 				printf("Btr_recSplit failed: PF_UnpinPage of adr\n");
 				return err;
@@ -1417,6 +1420,7 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 				printf("Btr_recSplit failed: inserting new value in current internal node(without splitting)\n");
 				return err;
 			}
+			printf("Btr_recSplit: internal node not full. entry added\n");
 			return AME_OK;
 		} /* internal node full, split again */
 		else {
@@ -1457,6 +1461,7 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 
 			/* if there is no parent node (current node is root), create new root and update */
 			if (parent.pagenum == NODE_NULLPTR){
+				printf("root node full, assigning a new root\n");	
 				if ((err = Btr_assignNode(ait[AM_fd].pfd, NODE_INT, amhdr->attrLength, amhdr->maxKeys, &newRoot, &pbuf_nbr, parent)) != AME_OK){
 					printf("Btr_recSplit failed(internal): assigning a new root node\n");
 					return err;
@@ -1487,6 +1492,7 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 					printf("Btr_recSplit failed: PF_UnpinPage of new root node\n");
 					return err;
 				}
+				printf("root node full, assigning a new root: ended\n");	
 			}
 
 			/* moving keys, removing moved keys from the original node */
@@ -1635,6 +1641,8 @@ int Btr_recInsert(int AM_fd, char * value, RECID recId, RECID adr){
 				printf("Btr_recInsert failed: Btr_recSplit at node %d\n", adr.pagenum);
 				return err;
 			}
+			printf("Btr_recInsert: successfully split at a leaf node\n");
+			return AME_OK;
 		} else {
 			/* looking for a place to fit */
 			for (i = 0; i < entries; i++){
@@ -1803,18 +1811,14 @@ int Btr_recInsert(int AM_fd, char * value, RECID recId, RECID adr){
 				printf("Btr_recInsert failed: inserting new key at %d th entry\n", i);
 				return err;
 			}
+			printf("Btr_recInsert: new value %s inserted at %d of pagenum %d\n", value, i, adr.pagenum);
 
 			/* updating 'entries' of the leaf node and header's 'numRecs' */
 			entries++;
 			amhdr->numRecs++;
 			ait[AM_fd].hdrchanged = TRUE;
 			bhdr->entries = entries;
-			/*
-			if (memcpy (pbuf, &entries, sizeof(int)) == NULL){
-				printf("Btr_recInsert failed: updating number of valid entries in the leaf node \n");
-				return AME_UNIX;
-			}
-			*/
+			
 			if ((err = PF_UnpinPage(ait[AM_fd].pfd, adr.pagenum, TRUE)) != PFE_OK){
 				printf("Btr_recInsert failed: PF_UnpinPage of adr\n");
 				return err;
@@ -1830,11 +1834,7 @@ int Btr_recInsert(int AM_fd, char * value, RECID recId, RECID adr){
 		} /* node is empty */
 		else if (entries == 0) {
 			/* fill the entry with this key, go to the right child */
-			/*
-			if ((err = Btr_setPtr(&pbuf, NODE_INT, amhdr->attrLength, 0, amhdr->maxKeys, &tempRid)) != AME_OK){
-				printf("Btr_recInsert failed: moving %d th ptr of current internal node right\n", entries - j);
-				return err;
-			} */
+			
 			if ((err = Btr_setKey(&pbuf, NODE_INT, amhdr->attrLength, 0, amhdr->maxKeys, value)) != AME_OK){
 				printf("Btr_recInsert failed: filling in an empty node with a key\n");
 				return err;
@@ -1842,12 +1842,7 @@ int Btr_recInsert(int AM_fd, char * value, RECID recId, RECID adr){
 
 			entries++;
 			bhdr->entries = entries;
-			/*
-			if (memcpy (pbuf, &entries, sizeof(BtrHdr)) == NULL){
-				printf("Btr_recInsert failed: updating number of valid entries in the internal node \n");
-				return AME_UNIX;
-			}
-			*/
+			
 			if((err = PF_UnpinPage(ait[AM_fd].pfd, adr.pagenum, TRUE)) != PFE_OK){
 				printf("Btr_recInsert failed: PF_UnpinPage of adr\n");
 				return err;
@@ -1888,7 +1883,7 @@ int Btr_recInsert(int AM_fd, char * value, RECID recId, RECID adr){
 				return AME_PF;
 			}
 			if (recId.recnum == NODE_INTNULL){
-
+				printf("Btr_recInsert: adding an entry at INTERNAL NODE\n");
 				/* moving entries that are bigger than 'value', with ptrs on the RIGHT, not left */
 				if (i < entries){
 					for (j = 0; j < entries - i; j++){
@@ -1910,6 +1905,7 @@ int Btr_recInsert(int AM_fd, char * value, RECID recId, RECID adr){
 						}
 					}
 				}
+				printf("Btr_recInsert: adding an entry at INTERNAL NODE, about to add an entry\n");
 				if ((err = Btr_setPtr(&pbuf, NODE_INT, amhdr->attrLength, (i+1), amhdr->maxKeys, &recId)) != AME_OK){
 					printf("Btr_recInsert failed: inserting new ptr(on the right) at %d th entry\n", j);
 					return err;
@@ -1924,6 +1920,7 @@ int Btr_recInsert(int AM_fd, char * value, RECID recId, RECID adr){
 					printf("Btr_recInsert failed: PF_UnpinPage of adr\n");
 					return err;
 				}
+				printf("Btr_recInsert: adding an entry at INTERNAL NODE ended\n");
 				return AME_OK;
 			} /* the inserted value is from actual record. proceed to child nodes */
 			else {
