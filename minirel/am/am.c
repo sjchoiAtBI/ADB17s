@@ -958,7 +958,12 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 								printf("Btr_recSplit failed: assigning NEXT ptr of newly assigned leaf node \n");
 								return err;
 							}
-
+							if(tempRid_nbr.pagenum != NODE_NULLPTR){
+								if ((err = PF_UnpinPage(ait[AM_fd].pfd, tempRid_nbr.pagenum, TRUE)) != PFE_OK){
+									printf("Btr_recSplit failed: PF_UnpinPage of NEXT neighbor\n");
+									return err;
+								}
+							}
 							if ((err = Btr_getPtr(&pbuf, NODE_LEAF, amhdr->attrLength, LEAFIDX_PREV, amhdr->maxKeys, &tempRid_nbr)) != AME_OK){
 								printf("Btr_recSplit failed: retrieving PREV ptr of a leaf node\n");
 								return err;
@@ -1000,6 +1005,28 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 								return err;
 							}
 						}
+						if ((err = PF_UnpinPage(ait[AM_fd].pfd, parent.pagenum, TRUE)) != PFE_OK){
+							printf("Btr_recSplit failed: PF_UnpinPage of parent\n");
+							return err;
+						}
+						if (tempRid_nbr.pagenum != NODE_NULLPTR){
+							if ((err = PF_UnpinPage(ait[AM_fd].pfd, tempRid_nbr.pagenum, TRUE)) != PFE_OK){
+								printf("Btr_recSplit failed: PF_UnpinPage of PREV neighbor\n");
+								return err;
+							}
+						}
+						if ((err = PF_UnpinPage(ait[AM_fd].pfd, tempRid_new.pagenum, TRUE)) != PFE_OK){
+							printf("Btr_recSplit failed: PF_UnpinPage of newnode 1\n");
+							return err;
+						}
+						if ((err = PF_UnpinPage(ait[AM_fd].pfd, tempRid.pagenum, TRUE)) != PFE_OK){
+							printf("Btr_recSplit failed: PF_UnpinPage of newnode 2\n");
+							return err;
+						}
+						if ((err = PF_UnpinPage(ait[AM_fd].pfd, adr.pagenum, TRUE)) != PFE_OK){
+							printf("Btr_recSplit failed: PF_UnpinPage of adr\n");
+							return err;
+						}
 						return AME_OK;
 					} else {
 						continue;
@@ -1007,7 +1034,7 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 				}
 
 				printf("Btr_recSplit failed: rid for the current node not found on the parent node?\n");
-				return AME_OK;
+				return AME_PF;
 
 
 			} /* duplicate value at the rightmost position */
@@ -1055,11 +1082,26 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 				amhdr->numRecs++;
 				ait[AM_fd].hdrchanged = TRUE;
 
-
 				/* copy up the new value, with new node's ptr */
 				tempRid_new.recnum = NODE_INTNULL;
 				if ((err = Btr_getKey(&pbuf_new, NODE_LEAF, amhdr->attrLength, 0, amhdr->maxKeys, tempValue)) != AME_OK){
 					printf("Btr_recSplit failed: retrieving first value of new leaf node\n");
+					return err;
+				}
+				
+				if (tempRid_nbr.pagenum != NODE_NULLPTR){
+					if ((err = PF_UnpinPage(ait[AM_fd].pfd, tempRid_nbr.pagenum, TRUE)) != PFE_OK){
+						printf("Btr_recSplit failed: PF_UnpinPage of NEXT neighbor\n");
+						return err;
+					}
+				}
+				if ((err = PF_UnpinPage(ait[AM_fd].pfd, tempRid_new.pagenum, TRUE)) != PFE_OK){
+					printf("Btr_recSplit failed: PF_UnpinPage of newnode 1\n");
+					return err;
+				}
+				
+				if ((err = PF_UnpinPage(ait[AM_fd].pfd, adr.pagenum, TRUE)) != PFE_OK){
+					printf("Btr_recSplit failed: PF_UnpinPage of adr\n");
 					return err;
 				}
 				if ((err = Btr_recSplit(AM_fd, tempValue, tempRid_new, parent, FALSE)) != AME_OK){
@@ -1067,8 +1109,6 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 					return err;
 				}
 				return AME_OK;
-
-
 
 			} /* otherwise: split twice */
 			else {
@@ -1085,7 +1125,12 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 					printf("Btr_recSplit failed: setting PREV ptr of new node\n");
 					return err;
 				}
-
+				if (tempRid_nbr.pagenum != NODE_NULLPTR){
+					if ((err = PF_UnpinPage(ait[AM_fd].pfd, tempRid_nbr.pagenum, TRUE)) != PFE_OK){
+						printf("Btr_recSplit failed: PF_UnpinPage of NEXT neighbor\n");
+						return err;
+					}
+				}
 				if ((err = Btr_getPtr(&pbuf_new, NODE_LEAF, amhdr->attrLength, LEAFIDX_NEXT, amhdr->maxKeys, &tempRid_nbr)) != AME_OK){
 					printf("Btr_recSplit failed: retrieving NEXT ptr of a leaf node\n");
 					return err;
@@ -1192,6 +1237,25 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 					printf("Btr_recSplit failed: retrieving %d th value of current leaf node\n", 0);
 					return err;
 				}
+				if (tempRid_nbr.pagenum != NODE_NULLPTR){
+					if ((err = PF_UnpinPage(ait[AM_fd].pfd, tempRid_nbr.pagenum, TRUE)) != PFE_OK){
+						printf("Btr_recSplit failed: PF_UnpinPage of NEXT neighbor\n");
+						return err;
+					}
+				}
+				if ((err = PF_UnpinPage(ait[AM_fd].pfd, tempRid_new.pagenum, TRUE)) != PFE_OK){
+					printf("Btr_recSplit failed: PF_UnpinPage of newnode 1\n");
+					return err;
+				}
+				if ((err = PF_UnpinPage(ait[AM_fd].pfd, tempRid_new2.pagenum, TRUE)) != PFE_OK){
+					printf("Btr_recSplit failed: PF_UnpinPage of newnode 2\n");
+					return err;
+				}
+				
+				if ((err = PF_UnpinPage(ait[AM_fd].pfd, adr.pagenum, TRUE)) != PFE_OK){
+					printf("Btr_recSplit failed: PF_UnpinPage of adr\n");
+					return err;
+				}
 				tempRid_new.recnum = NODE_INTNULL;
 				if ((err = Btr_recSplit(AM_fd, value, tempRid_new, parent, FALSE)) != AME_OK){
 					printf("Btr_recSplit failed: copying up the new leaf node's first key value to parent from leaf\n");
@@ -1202,13 +1266,12 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 					printf("Btr_recSplit failed: copying up the new leaf node's first key value to parent from leaf\n");
 					return err;
 				}
-
+				
 				return AME_OK;
-
 			}
-
+			printf("Btr_recSplit failed: Why are you here?\n");
+			return AME_PF;
 		}
-
 
 		/* Things to do:
 			determine to which node the inserted key belongs - left or new
@@ -1323,7 +1386,16 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 			bhdr->entries--;
 			bhdr_new->entries++;
 		}
-
+		if (tempRid_nbr.pagenum != NODE_NULLPTR){
+			if ((err = PF_UnpinPage(ait[AM_fd].pfd, tempRid_nbr.pagenum, TRUE)) != PFE_OK){
+				printf("Btr_recSplit failed: PF_UnpinPage of NEXT neighbor\n");
+				return err;
+			}
+		}
+		if ((err = PF_UnpinPage(ait[AM_fd].pfd, adr.pagenum, TRUE)) != PFE_OK){
+			printf("Btr_recSplit failed: PF_UnpinPage of adr\n");
+			return err;
+		}
 		/* inserting the new value into one of the nodes */
 		if (new == BTR_LT){
 			if ((err = Btr_recInsert(AM_fd, value, recId, adr)) != AME_OK){
@@ -1345,6 +1417,10 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 			printf("Btr_recSplit failed: retrieving mid value of current leaf node\n");
 			return err;
 		}
+		if ((err = PF_UnpinPage(ait[AM_fd].pfd, tempRid_new.pagenum, TRUE)) != PFE_OK){
+			printf("Btr_recSplit failed: PF_UnpinPage of newnode 1\n");
+			return err;
+		}
 		if ((err = Btr_recSplit(AM_fd, tempValue, tempRid_new, parent, FALSE)) != AME_OK){
 			printf("Btr_recSplit failed: copying up the mid key value to parent from leaf\n");
 			return err;
@@ -1358,6 +1434,10 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 		if (entries < amhdr->maxKeys){
 			/* insert the key and ptr at an appropriate position */
 			/* inserting the new value into one of the nodes */
+			if ((err = PF_UnpinPage(ait[AM_fd].pfd, adr.pagenum, TRUE)) != PFE_OK){
+				printf("Btr_recSplit failed: PF_UnpinPage of adr\n");
+				return err;
+			}
 			adr.recnum = NODE_INTNULL;
 			if ((err = Btr_recInsert(AM_fd, value, recId, adr)) != AME_OK){
 				printf("Btr_recSplit failed: inserting new value in current internal node(without splitting)\n");
@@ -1429,6 +1509,10 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 				}
 				amhdr->numNodes++;
 				ait[AM_fd].hdrchanged = TRUE;
+				if ((err = PF_UnpinPage(ait[AM_fd].pfd, parent.pagenum, TRUE)) != PFE_OK){
+					printf("Btr_recSplit failed: PF_UnpinPage of new root node\n");
+					return err;
+				}
 			}
 
 			/* moving keys, removing moved keys from the original node */
@@ -1477,7 +1561,10 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 				return err;
 			}
 			bhdr->entries--;
-
+			if ((err = PF_UnpinPage(ait[AM_fd].pfd, adr.pagenum, TRUE)) != PFE_OK){
+				printf("Btr_recSplit failed: PF_UnpinPage of adr\n");
+				return err;
+			}
 			/* inserting the new value into one of the nodes */
 			if (new == BTR_LT){
 				adr.recnum = NODE_INTNULL;
@@ -1500,6 +1587,10 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 				printf("Btr_recSplit failed: retrieving mid value of current internal node\n");
 				return err;
 			}
+			if ((err = PF_UnpinPage(ait[AM_fd].pfd, tempRid_new.pagenum, TRUE)) != PFE_OK){
+				printf("Btr_recSplit failed: PF_UnpinPage of newnode 1\n");
+				return err;
+			}
 			if ((err = Btr_recSplit(AM_fd, tempValue, tempRid_new, parent, FALSE)) != AME_OK){
 				printf("Btr_recSplit failed: copying up the mid key value to parent from an internal node\n");
 				return err;
@@ -1507,10 +1598,10 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 			return AME_OK;
 
 		}
-
-		return AME_OK;
+		printf("Btr_recSplit failed: not supposed to reach here?\n");
+		return AME_PF;
 	}
-
+	printf("Btr_recSplit failed: not supposed to reach here?\n");
 	return AME_PF;
 }
 
