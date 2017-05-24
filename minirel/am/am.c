@@ -1774,6 +1774,10 @@ int Btr_recInsert(int AM_fd, char * value, RECID recId, RECID adr){
 				return AME_UNIX;
 			}
 			*/
+			if((err = PF_UnpinPage(ait[AM_fd].pfd, adr.pagenum, TRUE)) != PFE_OK){
+				printf("Btr_recInsert failed: PF_UnpinPage of adr\n");
+				return err;
+			}
 			/* receiving pointer information */
 			printf("adr before: pagenum %d, recnum %d\n", adr.pagenum, adr.recnum);
 			if ((err = Btr_getPtr(&pbuf, NODE_INT, amhdr->attrLength, 1, amhdr->maxKeys, &adr)) != AME_OK){
@@ -1782,10 +1786,7 @@ int Btr_recInsert(int AM_fd, char * value, RECID recId, RECID adr){
 			}
 			printf("adr updated: pagenum %d, recnum %d\n", adr.pagenum, adr.recnum);
 			printf("zero entry 3\n");
-			if((err = PF_UnpinPage(ait[AM_fd].pfd, adr.pagenum, TRUE)) != PFE_OK){
-				printf("Btr_recInsert failed: PF_UnpinPage of adr\n");
-				return err;
-			}
+			
 			return Btr_recInsert(AM_fd, value, recId, adr);
 		} /* node is not empty, find the way */
 		else {
@@ -1853,16 +1854,17 @@ int Btr_recInsert(int AM_fd, char * value, RECID recId, RECID adr){
 				return AME_OK;
 			} /* the inserted value is from actual record. proceed to child nodes */
 			else {
+				if((err = PF_UnpinPage(ait[AM_fd].pfd, adr.pagenum, TRUE)) != PFE_OK){
+					printf("Btr_recInsert failed: PF_UnpinPage of adr\n");
+					return err;
+				}
 				/* receiving pointer information */
 				if ((err = Btr_getPtr(&pbuf, NODE_INT, amhdr->attrLength, i, amhdr->maxKeys, &adr)) != AME_OK){
 					printf("Btr_recInsert failed: receiving pointer for a child at a nonempty internal node\n");
 					return err;
 				}
 				printf("adr updated: pagenum %d, recnum %d\n", adr.pagenum, adr.recnum);
-				if((err = PF_UnpinPage(ait[AM_fd].pfd, adr.pagenum, TRUE)) != PFE_OK){
-					printf("Btr_recInsert failed: PF_UnpinPage of adr\n");
-					return err;
-				}
+				
 				return Btr_recInsert(AM_fd, value, recId, adr);
 			}
 		}
