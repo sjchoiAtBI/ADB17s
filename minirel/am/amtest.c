@@ -77,7 +77,7 @@ void amtest1()
 
    /* Inserting value in the HF file and the B+ Tree */
       value = 10;
-      while (value < 1000)
+      while (value < 100)
       {
          sprintf(string_val, "entry%d", value);
          /* Notice the recid value being inserted is trash.    */

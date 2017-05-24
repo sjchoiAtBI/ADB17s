@@ -2139,7 +2139,7 @@ RECID Btr_getFirstValue(int fd, char ** record, RECID * nodeAdr){
 		bhdr = (BtrHdr *)pbuf;
 		if (bhdr->entries > 0){
 			nodeAdr->pagenum = tempRid.pagenum;
-			nodeAdr->recnum = NODE_NULLPTR;
+			nodeAdr->recnum = 0;
 			/* retrieve the first value and pointer, since it is the smallest and first record */
 			if ((err = Btr_getPtr(&pbuf, NODE_LEAF, amhdr->attrLength, 0, amhdr->maxKeys, &tempRid)) != AME_OK){
 				printf("Btr_getFirstValue failed: receiving pointer of leaf node\n");
