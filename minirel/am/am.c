@@ -62,6 +62,7 @@ typedef struct AMstab_ele {
 	int op;
 	char *value;
 	RECID current;
+	RECID currentNode;
 }AMstab_ele;
 
 typedef struct Btr_nodeHdr{
@@ -2371,10 +2372,10 @@ RECID Btr_getNextValue(int fd, char ** record_out, RECID * nodeAdr){
 			if((err = PF_UnpinPage(ait[fd].pfd, nodeAdr->pagenum, TRUE)) != PFE_OK){
 				printf("cBtr_getNextValue failed: PF_UnpinPage of leaf\n");
 				return res;
-			}
+			} printf("ret0\n");
 			return tempRid;
 		}
-	}
+	}printf("ret1\n");
 	return res;
 }
 
@@ -2410,7 +2411,7 @@ RECID AM_FindNextEntry(int scanDesc){
 	int count = 0;
 
 	RECID rec_err;
-	RECID nodeAdr;
+	RECID nodeAdr = ast[scanDesc].currentNode;
 	rec_err.pagenum = NODE_NULLPTR;
 	rec_err.recnum = -1;
 
@@ -2434,7 +2435,7 @@ RECID AM_FindNextEntry(int scanDesc){
 			recid = Btr_getNextValue(ast[scanDesc].fd, &record, &nodeAdr);
 		}
 
-		if (count == 100) exit(-1);
+		if (count == 25) exit(-1);
 		if (recid.pagenum == -1) {
 			AMerrno = AME_EOF;
 			return recid;
@@ -2482,6 +2483,7 @@ RECID AM_FindNextEntry(int scanDesc){
 	}
 
 	ast[scanDesc].current = recid;
+	ast[scanDesc].currentNode = nodeAdr;
 	return recid;
 }
 
