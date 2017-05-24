@@ -238,7 +238,7 @@ int BF_FlushBuf(int fd) {
 			/* if 'Flushed_page' is pinned, return error message */
 			if (Flushed_page->count != 0) {
 				/* printf("BFE_PAGEFIXED %d\n", Flushed_page->count); */
-				printf("pagefixed");
+				printf("allocbuf: pagefixed");
 				return BFE_PAGEFIXED;
 			}
 

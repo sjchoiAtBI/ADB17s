@@ -195,7 +195,7 @@ int Btr_assignNode(int pfd, char nodeType, int attrLength, int keyNum, int *page
 		Btr_initHdr(bhdr);
 		/* setting parent information */
 		bhdr->parent.pagenum = parent.pagenum;
-		printf("testing Btr_initHdr:\n hdr->entries: %d, hdr->parent.pagenum: %d, hdr->duplicate: %d\n", bhdr->entries, bhdr->parent.pagenum, bhdr->duplicate);
+		printf("testing Btr_initHdr: BtrHdr_size: %d, hdr->entries: %d, hdr->parent.pagenum: %d, hdr->duplicate: %d\n", (int)sizeof(BtrHdr), bhdr->entries, bhdr->parent.pagenum, bhdr->duplicate);
 		/* root & internal node */
 		if ((nodeType == NODE_ROOT) || (nodeType == NODE_INT)){
 			initRid.recnum = NODE_INTNULL;
@@ -232,7 +232,8 @@ int Btr_assignNode(int pfd, char nodeType, int attrLength, int keyNum, int *page
 			return AME_INVALIDPARA;
 		}
 
-		return PF_UnpinPage(pfd, *pagenum, 1) == PFE_OK ? AME_OK : AME_PF;
+		/* return PF_UnpinPage(pfd, *pagenum, 1) == PFE_OK ? AME_OK : AME_PF; */
+		return AME_OK;
 	}
 
 	return AME_PF;
@@ -245,7 +246,8 @@ int Btr_getNode(char ** pbuf, int AM_fd, RECID adr){
 		printf("Btr_getNode failed: PF_GetThisPage \n");
 		return AME_PF;
 	}
-	return PF_UnpinPage(ait[AM_fd].pfd, adr.pagenum, 1) == PFE_OK? AME_OK : AME_PF;
+	/* return PF_UnpinPage(ait[AM_fd].pfd, adr.pagenum, 1) == PFE_OK? AME_OK : AME_PF; */
+	return AME_OK;
 }
 
 /*
@@ -356,11 +358,18 @@ int Btr_setPtr(char * pbuf, char nodeType, int attrLength, int idx, int keyNum, 
 		}
 		printf("node_leaf 2\n");
 		if (idx == LEAFIDX_PREV){
+			printf("node_leaf 3, LEAFIDX_PREV\n");
 			if (memcpy(pbuf + sizeof(BtrHdr), rid, sizeof(RECID)) == NULL){
 				printf("Btr_setPtr failed: 'memcpy' for writing ptr of prev leaf node\n");
 				return AME_UNIX;
 			}
 		} else if (idx == LEAFIDX_NEXT){
+			printf("node_leaf 3, LEAFIDX_NEXT. writing length %d from address %d\n", (int)sizeof(RECID), (int)(sizeof(BtrHdr) + sizeof(RECID) + keyNum * (sizeof(RECID) + attrLength)));
+			if (memcpy(&temp, pbuf + sizeof(BtrHdr) + sizeof(RECID) + keyNum * (sizeof(RECID) + attrLength), sizeof(RECID)) == NULL){
+				printf("Btr_setPtr failed: 'memcpy' for writing ptr of next leaf node\n");
+				return AME_UNIX;
+			}
+			printf("setPtr: temp: pagenum %d, recnum %d\n", temp.pagenum, temp.recnum);
 			if (memcpy(pbuf + sizeof(BtrHdr) + sizeof(RECID) + keyNum * (sizeof(RECID) + attrLength), rid, sizeof(RECID)) == NULL){
 				printf("Btr_setPtr failed: 'memcpy' for writing ptr of next leaf node\n");
 				return AME_UNIX;
@@ -444,7 +453,8 @@ int AM_CreateIndex(char *fileName, int indexNo, char attrType, int attrLength, b
 	}
 
 	/* determine the number of pointers which can fit into each b+ tree node */
-	keyNum = (PAGE_SIZE - sizeof(BtrHdr) - 2*sizeof(RECID)) / (sizeof(RECID) + attrLength) - 10;
+	/*keyNum = (PAGE_SIZE - sizeof(BtrHdr) - 2*sizeof(RECID)) / (sizeof(RECID) + attrLength) - 10; */
+	keyNum = (PAGE_SIZE - sizeof(BtrHdr) - 2*sizeof(RECID)) / (sizeof(RECID) + attrLength);
 	printf("RECID size: %d, attrLength: %d, num. of entries in each node: %d\n", (int)sizeof(RECID), attrLength, keyNum);
 
 	amhdr.indexNo = indexNo;
@@ -496,7 +506,20 @@ int AM_CreateIndex(char *fileName, int indexNo, char attrType, int attrLength, b
 	}
 	printf("checking error: at link?\n");
 
+	if((err = PF_UnpinPage(pfd, pagenum[0], TRUE)) != PFE_OK){
+		printf("AM_CreateIndex failed: PF_UnpinPage of root node\n");
+		return err;
+	}
+
 	/* links between leaf nodes */
+	if ((err = Btr_getPtr(pbuf[1], NODE_LEAF, attrLength, LEAFIDX_NEXT, keyNum, &temp)) != AME_OK){
+		printf("AM_CreateIndex failed: linking first leaf node to the second one\n");
+		return err;
+	}
+	if ((err = Btr_getPtr(pbuf[1], NODE_LEAF, attrLength, LEAFIDX_PREV, keyNum, &rid)) != AME_OK){
+		printf("AM_CreateIndex failed: linking first leaf node to the second one\n");
+		return err;
+	}
 	rid.recnum = NODE_NULLPTR;
 	if ((err = Btr_setPtr(pbuf[1], NODE_LEAF, attrLength, LEAFIDX_NEXT, keyNum, &rid)) != AME_OK){
 		printf("AM_CreateIndex failed: linking first leaf node to the second one\n");
@@ -513,6 +536,14 @@ int AM_CreateIndex(char *fileName, int indexNo, char attrType, int attrLength, b
 	}
 	pfte->hdrchanged = TRUE;
 
+	if((err = PF_UnpinPage(pfd, pagenum[1], TRUE)) != PFE_OK){
+		printf("AM_CreateIndex failed: PF_UnpinPage of first leaf node\n");
+		return err;
+	}
+	if((err = PF_UnpinPage(pfd, pagenum[2], TRUE)) != PFE_OK){
+		printf("AM_CreateIndex failed: PF_UnpinPage of second node\n");
+		return err;
+	}
 
 	return PF_CloseFile(pfd) == PFE_OK ? AME_OK : AME_PF;
 }
@@ -529,6 +560,7 @@ int AM_DestroyIndex(char *fileName, int indexNo){
 }
 
 int AM_OpenIndex(char *fileName, int indexNo){
+	int err;
 	int pfd;
 	int aid;
 	char * pbuf;
@@ -565,7 +597,11 @@ int AM_OpenIndex(char *fileName, int indexNo){
 			printf("%d th ptr: pagenum %d, recnum %d\n", 0, temp.pagenum, temp.recnum);
 			Btr_getPtr(pbuf, NODE_ROOT, aite->hdr.attrLength, 1, aite->hdr.maxKeys, &temp);
 			printf("%d th ptr: pagenum %d, recnum %d\n", 1, temp.pagenum, temp.recnum);
-
+			
+			if((err = PF_UnpinPage(pfd, aite->hdr.root.pagenum, FALSE)) != PFE_OK){
+				printf("AM_OpenIndex failed: PF_UnpinPage of root node\n");
+				return err;
+			}
 
 			return aid;
 		}
