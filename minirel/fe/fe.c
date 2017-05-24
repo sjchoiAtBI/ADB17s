@@ -63,7 +63,6 @@ void DBcreate(char *dbname) {
         return;
     };
 
-
     /* Create relcat. */
     length = strlen(dbname) + strlen(RELCATNAME);
     filename = (char *) malloc (sizeof(char) * length);
@@ -305,11 +304,32 @@ int  DestroyTable(char *relName) {
     return FEE_OK;
 }
 
+int HF_ReplaceRec (int fd, RECID recId, char *record, RECID *newRecId) {
+    RECID temp;
+
+    temp = HF_InsertRec(fd, record);
+    if (!HF_ValidRecId(fd, temp)) {
+        return HFE_INTERNAL;
+    }
+
+    if (HF_DeleteRec(fd, recId) != HFE_OK) {
+        HF_DeleteRec(fd, temp);
+        return HFE_INTERNAL;
+    }
+
+    if (newRecId) {
+        *newRecId = temp;
+    }
+
+    return HFE_OK;
+}
+
 int  BuildIndex(char *relName, char *attrName) {
-    char *filename;
-    int fd, sd, found;
+    char *filename, record;
+    int fd, sd, found, attrIndex, ifd;
     RELDESCTYPE rel;
     ATTRDESCTYPE attr;
+    RECID recId, recRecId, attrRecId;
 
     /* Update attrcat. */
     if ((sd = HF_OpenFileScan(afd, STRING_TYPE, MAXNAME, 0, EQ_OP, relName)) < 0) {
@@ -317,6 +337,7 @@ int  BuildIndex(char *relName, char *attrName) {
     }
 
     found = 0;
+    attrIndex = 0;
     recId = HF_FindNextRec(sd, &attr);
     while (HF_ValidRecId(afd, recId)) {
         if (strcmp(attr.attrname, attrName) == 0) {
@@ -327,7 +348,7 @@ int  BuildIndex(char *relName, char *attrName) {
 
             attr.indexed = TRUE;
 
-            if (HF_DeleteRec(afd, recId) != HFE_OK || HF_InsertRec(afd, &attr) != HFE_OK) {
+            if (HF_ReplaceRec(afd, recId, &attr, &attrRecId) != HFE_OK) {
                 HF_CloseFileScan(sd);
                 return FEE_HF;
             }
@@ -337,6 +358,7 @@ int  BuildIndex(char *relName, char *attrName) {
         }
 
         recId = HF_FindNextRec(sd, &attr);
+        attrIndex++;
     }
 
     if (!found) {
@@ -345,60 +367,251 @@ int  BuildIndex(char *relName, char *attrName) {
     }
 
     if (HF_CloseFileScan(sd) != HFE_OK) {
+        attr.indexed = FALSE;
+        HF_ReplaceRec(afd, attrRecId, &attr, NULL);
         return FEE_HF;
     }
 
     /* Update relcat. */
     if ((sd = HF_OpenFileScan(rfd, STRING_TYPE, MAXNAME, 0, EQ_OP, relName)) < 0) {
+        attr.indexed = FALSE;
+        HF_ReplaceRec(afd, attrRecId, &attr, NULL);
         return FEE_HF;
     }
 
     recId = HF_FindNextRec(sd, &rel);
     if (!HF_ValidRecId(rfd, recId)) {
+        attr.indexed = FALSE;
+        HF_ReplaceRec(afd, attrRecId, &attr, NULL);
         HF_CloseFileScan(sd);
         return FEE_HF;
     }
 
     rel.indexcnt++;
-    if (HF_DeleteRec(rfd, recId) != HFE_OK || HF_InsertRec(rfd, &rel) != HFE_OK) {
+    if (HF_ReplaceRec(rfd, recId, &rel, &relRecId) != HFE_OK) {
+        attr.indexed = FALSE;
+        HF_ReplaceRec(afd, attrRecId, &attr, NULL);
         HF_CloseFileScan(sd);
         return FEE_HF;
     }
 
     if (HF_CloseFileScan(sd) != HFE_OK) {
+        attr.indexed = FALSE;
+        HF_ReplaceRec(afd, attrRecId, &attr, NULL);
+        rel.indexcnt--;
+        HF_ReplaceRec(rfd, relRecId, &rel, NULL);
         return FEE_HF;
     }
 
     /* Build am index. */
     filename = (char *) malloc (sizeof(char) * (strlen(db) + 1 + strlen(relName));
     sprintf(filename, "%s/%s", db, relName);
-    if (HF_CreateFile(filename, len) != HFE_OK) {
-        free(filename);
-        return FEE_HF;
-    }
 
     if ((fd = HF_OpenFile(filename)) < 0) {
+        attr.indexed = FALSE;
+        HF_ReplaceRec(afd, attrRecId, &attr, NULL);
+        rel.indexcnt--;
+        HF_ReplaceRec(rfd, relRecId, &rel, NULL);
         free(filename);
         return FEE_HF;
     }
 
     if ((sd = HF_OpenFileScan(fd, attr.attrtype, attr.attrlen, attr.offset, EQ_OP, NULL)) < 0) {
+        attr.indexed = FALSE;
+        HF_ReplaceRec(afd, attrRecId, &attr, NULL);
+        rel.indexcnt--;
+        HF_ReplaceRec(rfd, relRecId, &rel, NULL);
         HF_CloseFile(fd);
+        free(filename);
         return FEE_HF;
     }
 
-    if (AM_CreateIndex(filename, rel.indexcnt - 1, (char) attr.attrtype, attr.attrlen, FALSE) != AME_OK) {
+    if (AM_CreateIndex(filename, attrIndex, (char) attr.attrtype, attr.attrlen, FALSE) != AME_OK) {
+        attr.indexed = FALSE;
+        HF_ReplaceRec(afd, attrRecId, &attr, NULL);
+        rel.indexcnt--;
+        HF_ReplaceRec(rfd, relRecId, &rel, NULL);
+        HF_CloseFileScan(sd);
+        HF_CloseFile(fd);
         free(filename);
         return FEE_AM;
     }
 
+    if ((ifd = AM_OpenIndex(filename, attrIndex)) < 0) {
+        attr.indexed = FALSE;
+        HF_ReplaceRec(afd, attrRecId, &attr, NULL);
+        rel.indexcnt--;
+        HF_ReplaceRec(rfd, relRecId, &rel, NULL);
+        AM_DestroyIndex(filename, attrIndex);
+        HF_CloseFileScan(sd);
+        HF_CloseFile(fd);
+        free(filename);
+        return FEE_AM;
+    }
 
+    record = (char *) malloc(rel.relwid);
+    recId = HF_FindNextRec(sd, &record);
+    while (HF_ValidRecId(fd, recId)) {
+        if (AM_InsertEntry(ifd, record + attr.offset, recId) != AME_OK) {
+            attr.indexed = FALSE;
+            HF_ReplaceRec(afd, attrRecId, &attr, NULL);
+            rel.indexcnt--;
+            HF_ReplaceRec(rfd, relRecId, &rel, NULL);
+            AM_CloseIndex(ifd);
+            AM_DestroyIndex(filename, attrIndex);
+            HF_CloseFileScan(sd);
+            HF_CloseFile(fd);
+            free(filename);
+            return FEE_AM;
+        }
+    }
 
     free(filename);
+
+    if (AM_CloseIndex(ifd) != AME_OK || HF_CloseFileScan(sd) != HFE_OK || HF_CloseFile(fd) != HFE_OK) {
+        return FEE_AM;
+    }
+
+    return FEE_OK;
+}
+
+void recoverIndex(char *relname) {
+    char *filename;
+    int i, fd, sd;
+    ATTRDESCTYPE attr;
+    RECID recId;
+
+    if ((sd = HF_OpenFileScan(afd, STRING_TYPE, MAXNAME, 0, EQ_OP, relname)) < 0) {
+        return ;
+    }
+
+    filename = (char *) malloc (sizeof(char) * (strlen(db) + 1 + strlen(relName));
+    sprintf(filename, "%s/%s", db, relName);
+
+    recId = HF_FindNextRec(sd, &attr);
+    while (HF_ValidRecId(afd, recId)) {
+        if ((fd = AM_OpenIndex(filename, i)) >= 0) {
+            attr.indexed = TRUE;
+            HF_ReplaceRec(afd, recId, &attr, NULL);
+            AM_CloseIndex(fd);
+        }
+
+        recId = HF_FindNextRec(sd, &attr);
+    }
+
+    free(filename);
+    HF_CloseFileScan(sd);
 }
 
 int  DropIndex(char *relname, char *attrName) {
+    char *filename, record;
+    int fd, sd, i, attrIndex, ifd, prevIndexcnt;
+    RELDESCTYPE rel;
+    ATTRDESCTYPE attr;
+    RECID recId, recRecId, attrRecId;
 
+    /* Update attrcat. */
+    if ((sd = HF_OpenFileScan(afd, STRING_TYPE, MAXNAME, 0, EQ_OP, relname)) < 0) {
+        return FEE_HF;
+    }
+
+    attrIndex = 0;
+    recId = HF_FindNextRec(sd, &attr);
+    while (HF_ValidRecId(afd, recId)) {
+        if (attrName == NULL) {
+            if (attr.indexed == TRUE) {
+                attr.indexed = FALSE;
+                if (HF_ReplaceRec(afd, recId, &attr, &attrRecId) != HFE_OK) {
+                    HF_CloseFileScan(sd);
+                    recoverIndex(relname);
+                    return FEE_NOTINDEXED;
+                }
+            }
+        } else if (strcmp(attr.attrname, attrName) == 0) {
+            if (attr.indexed == FALSE) {
+                HF_CloseFileScan(sd);
+                return FEE_NOTINDEXED;
+            }
+
+            attr.indexed = FALSE;
+
+            if (HF_ReplaceRec(afd, recId, &attr, &attrRecId) != HFE_OK) {
+                HF_CloseFileScan(sd);
+                return FEE_HF;
+            }
+
+            break;
+        }
+
+        recId = HF_FindNextRec(sd, &attr);
+        attrIndex++;
+    }
+
+    if (HF_CloseFileScan(sd) != HFE_OK) {
+        recoverIndex(relname);
+        return FEE_HF;
+    }
+
+    /* Update relcat. */
+    if ((sd = HF_OpenFileScan(rfd, STRING_TYPE, MAXNAME, 0, EQ_OP, relName)) < 0) {
+        recoverIndex(relname);
+        return FEE_HF;
+    }
+
+    recId = HF_FindNextRec(sd, &rel);
+    if (!HF_ValidRecId(rfd, recId)) {
+        recoverIndex(relname);
+        HF_CloseFileScan(sd);
+        return FEE_HF;
+    }
+
+    prevIndexcnt = rel.indexcnt;
+    if (attrName) {
+        rel.indexcnt--;
+    } else {
+        rel.indexcnt = 0;
+    }
+
+    if (HF_ReplaceRec(rfd, recId, &rel, &relRecId) != HFE_OK) {
+        recoverIndex(relname);
+        HF_CloseFileScan(sd);
+        return FEE_HF;
+    }
+
+    if (HF_CloseFileScan(sd) != HFE_OK) {
+        recoverIndex(relname);
+        rel.indexcnt = prevIndexcnt;
+        HF_ReplaceRec(rfd, relRecId, &rel, NULL);
+        return FEE_HF;
+    }
+
+    /* Build am index. */
+    if ((sd = HF_OpenFileScan(afd, STRING_TYPE, MAXNAME, 0, EQ_OP, relname)) < 0) {
+        recoverIndex(relname);
+        rel.indexcnt = prevIndexcnt;
+        HF_ReplaceRec(rfd, relRecId, &rel, NULL);
+        return ;
+    }
+
+    filename = (char *) malloc (sizeof(char) * (strlen(db) + 1 + strlen(relName));
+    sprintf(filename, "%s/%s", db, relName);
+
+    recId = HF_FindNextRec(sd, &attr);
+    while (HF_ValidRecId(afd, recId)) {
+        if (attrName == NULL) {
+            AM_DestroyIndex (filename, attr.attrno);
+        } else if (strcmp(attr.attrname, attrName) == 0) {
+            AM_DestroyIndex (filename, attr.attrno);
+            break;
+        }
+
+        recId = HF_FindNextRec(sd, &attr);
+    }
+
+    free(filename);
+    HF_CloseFileScan(sd);
+
+    return FEE_OK;
 }
 
 int  LoadTable(char *relName, char *fileName) {
