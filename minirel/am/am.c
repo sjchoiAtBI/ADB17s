@@ -147,6 +147,10 @@ int Btr_initHdr(BtrHdr * hdr){
 	return AME_OK;
 }
 
+int Btr_printNode(char * pbuf){
+	printf("BtrHdr// entries: %d, parent.pagenum: %d, parent.recnum: %d, duplicate: %d // Ptr 0 // pagenum %d, recnum %d // Ptr 1 // pagenum %d, recnum %d //\n");
+	return AME_OK;
+}
 /*
    B+ tree Implementation
     type: node type. 'r' for root, 'i' for internal node, 'l' for leaf node.
@@ -490,6 +494,7 @@ int AM_CreateIndex(char *fileName, int indexNo, char attrType, int attrLength, b
 		printf("AM_CreateIndex failed: Btr_setPtr at NODE_ROOT to second NODE_LEAF\n");
 		return err;
 	}
+	Btr_printNode(pbuf[0]);
 	/* second child(leaf) node */
 	if ((err = Btr_assignNode(pfd, NODE_LEAF, attrLength, keyNum, pagenum+2, pbuf[2], parent)) != AME_OK){
 		printf("AM_CreateIndex failed: Btr_assignNode to second NODE_LEAF\n");
@@ -504,6 +509,8 @@ int AM_CreateIndex(char *fileName, int indexNo, char attrType, int attrLength, b
 		printf("AM_CreateIndex failed: Btr_setPtr at NODE_ROOT to second NODE_LEAF\n");
 		return err;
 	}
+	Btr_printNode(pbuf[1]);
+	Btr_printNode(pbuf[2]);
 	printf("checking error: at link?\n");
 
 	if((err = PF_UnpinPage(pfd, pagenum[0], TRUE)) != PFE_OK){
@@ -512,15 +519,18 @@ int AM_CreateIndex(char *fileName, int indexNo, char attrType, int attrLength, b
 	}
 
 	/* links between leaf nodes */
+	if ((err = Btr_getPtr(pbuf[1], NODE_LEAF, attrLength, LEAFIDX_PREV, keyNum, &temp)) != AME_OK){
+		printf("AM_CreateIndex failed: linking first leaf node to the second one\n");
+		return err;
+	}
+	printf("LEAFIDX_PREV of pnum[1]: pagenum %d, recnum %d\n", temp.pagenum, temp.recnum);
+
 	if ((err = Btr_getPtr(pbuf[1], NODE_LEAF, attrLength, LEAFIDX_NEXT, keyNum, &temp)) != AME_OK){
 		printf("AM_CreateIndex failed: linking first leaf node to the second one\n");
 		return err;
 	}
-	if ((err = Btr_getPtr(pbuf[1], NODE_LEAF, attrLength, LEAFIDX_PREV, keyNum, &rid)) != AME_OK){
-		printf("AM_CreateIndex failed: linking first leaf node to the second one\n");
-		return err;
-	}
-	rid.recnum = NODE_NULLPTR;
+	printf("LEAFIDX_NEXT of pnum[1]: pagenum %d, recnum %d\n", temp.pagenum, temp.recnum);
+		rid.recnum = NODE_NULLPTR;
 	if ((err = Btr_setPtr(pbuf[1], NODE_LEAF, attrLength, LEAFIDX_NEXT, keyNum, &rid)) != AME_OK){
 		printf("AM_CreateIndex failed: linking first leaf node to the second one\n");
 		return err;
