@@ -239,8 +239,8 @@ void amtest3()
    while (1)
    {
       /* clearing retrieved_value  */
-      memset(retrieved_value, ' ', STRSIZE);
-      recid = AM_FindNextEntry(sd);
+      memset(retrieved_value, ' ', STRSIZE);printf("aa\n");
+      recid = AM_FindNextEntry(sd);printf("aa2\n");
       if (!HF_ValidRecId(hf_fd,recid))
          if (AMerrno == AME_EOF) break; /*Out of records satisfying predicate */
       else
@@ -265,6 +265,7 @@ void amtest3()
          }
          else
             printf("DELETING entry %s\n", retrieved_value);
+
       }
 
    } /* while end */
@@ -276,7 +277,7 @@ void amtest3()
    }
 
    if (AM_CloseIndex(am_fd) != AME_OK) {
-      AM_PrintError("Problem closing index file");
+      AM_PrintError("aProblem closing index file");
       exit(1);
    }
 
