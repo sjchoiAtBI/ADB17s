@@ -32,6 +32,12 @@
 #define INAME_LEN 1000
 #define ITOA_DECIMAL 10
 
+#define printf myPrintf
+
+void myPrintf(const char *fmt, ...) {
+
+}
+
 int AMerrno;
 
 typedef struct AMhdr_str{

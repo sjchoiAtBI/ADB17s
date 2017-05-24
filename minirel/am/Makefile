@@ -32,3 +32,6 @@ clean:
 	rm -f lib${LIB}.a *.o ${LIB}test *.bak *~
 
 .c.o:; $(CC) $(CFLAGS) -c $< -I. -I$(INCDIR)
+
+run:
+	make clean; make; ./${LIB}test; ./${LIB}test > ${LIB}test.out; diff ${LIB}test.out ${LIB}test.out.orig
