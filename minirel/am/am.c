@@ -32,7 +32,7 @@
 #define INAME_LEN 1000
 #define ITOA_DECIMAL 10
 
-#define __MUTE__ 0
+#define __MUTE__ 1
 
 #if __MUTE__
 #define printf myPrintf
@@ -2493,14 +2493,13 @@ RECID AM_FindNextEntry(int scanDesc){
 	char* record = (char *)calloc(ast[scanDesc].attrLength, sizeof(char));
 	char* record_temp = (char *)calloc(ast[scanDesc].attrLength, sizeof(char));
 	int match = 0;
-	int count = 0;
 
 	RECID rec_err;
 	RECID nodeAdr = ast[scanDesc].currentNode;
 	rec_err.pagenum = NODE_NULLPTR;
 	rec_err.recnum = -1;
 
-	while(!match) {count++;
+	while(!match) {
 		printf("getNextValue: %d, %d / %d, %d\n", recid.pagenum, recid.recnum, nodeAdr.pagenum, nodeAdr.recnum);
 
 		if (recid.pagenum == AME_SCANOPEN && recid.recnum == AME_SCANOPEN) {
@@ -2520,7 +2519,6 @@ RECID AM_FindNextEntry(int scanDesc){
 			recid = Btr_getNextValue(ast[scanDesc].fd, &record, &nodeAdr);
 		}
 
-		if (count == 25) exit(-1);
 		if (recid.pagenum == -1) {
 			AMerrno = AME_EOF;
 			return recid;

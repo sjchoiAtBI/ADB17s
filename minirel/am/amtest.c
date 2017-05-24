@@ -144,10 +144,10 @@ void amtest2()
 
    /* Initializing the compare value */
    memset(comp_value, ' ', STRSIZE);
-   sprintf(comp_value, "entry50");
+   sprintf(comp_value, "entry700");
 
    /* Opening the index scan */
-   if ((sd = AM_OpenIndexScan(am_fd, GT_OP, comp_value)) < 0) {
+   if ((sd = AM_OpenIndexScan(am_fd, LT_OP, comp_value)) < 0) {
       AM_PrintError("Problem opening index scan");
       exit(1);
    }
@@ -221,10 +221,10 @@ void amtest3()
 
    /* Initializing the compare value */
    memset(comp_value, ' ', STRSIZE);
-   sprintf(comp_value, "entry50");
+   sprintf(comp_value, "entry700");
 
    /* Opening the index scan */
-   if ((sd = AM_OpenIndexScan(am_fd, GT_OP, comp_value)) < 0) {
+   if ((sd = AM_OpenIndexScan(am_fd, LT_OP, comp_value)) < 0) {
       AM_PrintError("Problem opening index scan");
       exit(1);
    }
