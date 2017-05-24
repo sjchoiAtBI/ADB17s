@@ -2122,7 +2122,7 @@ RECID Btr_getFirstValue(int fd, char ** record, RECID * nodeAdr){
 	while(TRUE){
 		/* at leaf node, check if this node has any valid entries */
 		bhdr = (BtrHdr *)pbuf;
-		if (bhdr->entries > 0){printf("ooo\n");
+		if (bhdr->entries > 0){
 			nodeAdr->pagenum = tempRid.pagenum;
 			nodeAdr->recnum = NODE_NULLPTR;
 			/* retrieve the first value and pointer, since it is the smallest and first record */
@@ -2138,9 +2138,9 @@ RECID Btr_getFirstValue(int fd, char ** record, RECID * nodeAdr){
 				printf("Btr_getFirstValue failed: PF_UnpinPage of root\n");
 				return res;
 			}
-printf("ooo1\n");
+
 			return tempRid;
-		} else {printf("ooo2\n");
+		} else {
 			tempRid2.pagenum = tempRid.pagenum;
 			tempRid2.recnum = tempRid.recnum;
 			if((err = PF_UnpinPage(ait[fd].pfd, tempRid2.pagenum, TRUE)) != PFE_OK){
@@ -2162,7 +2162,7 @@ printf("ooo1\n");
 					printf("Btr_getFirstValue failed: Btr_getNode to NEXT leaf node\n");
 					return res;
 				}
-			}printf("ooo3\n");
+			}
 		}
 	}
 }
@@ -2410,8 +2410,8 @@ RECID AM_FindNextEntry(int scanDesc){
 	rec_err.recnum = -1;
 
 	while(!match) {
-		if (recid.pagenum == AME_SCANOPEN && recid.recnum == AME_SCANOPEN) {printf("there\n");
-			recid = Btr_getFirstValue(ast[scanDesc].fd, &record, &nodeAdr);printf("there2\n");
+		if (recid.pagenum == AME_SCANOPEN && recid.recnum == AME_SCANOPEN) {
+			recid = Btr_getFirstValue(ast[scanDesc].fd, &record, &nodeAdr);
 		}
 		else {
 			/* copy from record to record_temp */
