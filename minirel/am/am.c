@@ -32,29 +32,36 @@
 #define INAME_LEN 1000
 #define ITOA_DECIMAL 10
 
+/* 
+	when set to 1, all the messages supposed to print by this code are ignored.
+	when set to 0, shows all the messages written in this code using 'printf'
+*/
 #define __MUTE__ 1
 
 #if __MUTE__
 #define printf myPrintf
 #endif
 
+/* dummy function to replace printf, when debugging mode is off */
 void myPrintf(const char *fmt, ...) {
 
 }
 
 int AMerrno;
 
+/* struct of AM index table's header */
 typedef struct AMhdr_str{
 	int indexNo;
 	char attrType;
 	int attrLength;
-	int maxKeys;
-	int numNodes;
-	int numRecs;
+	int maxKeys; /* maximum number of keys a B+ tree node can contain */
+	int numNodes; /* number of nodes the B+ tree corresponding to this AM index table element now contains */
+	int numRecs; /* number of records the B+ tree corresponding to this AM index table element now contains */
 	bool_t isUnique;
-	RECID root;
+	RECID root; /* contains the page number to root node of the B+ tree */
 } AMhdr_str;
 
+/* struct of AM index table element */
 typedef struct AMitab_ele{
 	bool_t valid;
 	char * fname;
@@ -63,28 +70,39 @@ typedef struct AMitab_ele{
 	short hdrchanged;
 } AMitab_ele;
 
+/* struct of AM scan table element */
 typedef struct AMstab_ele {
 	bool_t valid;
 	int fd;
 	char attrType;
 	int attrLength;
-	int attrOffset;
 	int op;
 	char *value;
 	RECID current;
 	RECID currentNode;
 }AMstab_ele;
 
+/* struct of B+ tree node's header */
 typedef struct Btr_nodeHdr{
-	int entries;
-	RECID parent;
+	int entries; /* number of records this node contains */
+	RECID parent; /* pointer to parent node */
 	bool_t duplicate; /* TRUE if it only contains duplicate values */
 } BtrHdr;
 
 AMitab_ele *ait = NULL;
 AMstab_ele *ast = NULL;
 
+/* 
+	checks whether the index with the same file name exists
+	
+	*** parameters ***
+	char * filename - name of the file corresponding to this index
+	int indexNo - number of the index for the given file
 
+	*** return values ***
+	TRUE if there is an index with the given file name and index number
+	FALSE otherwise
+*/
 bool_t AM_IndexExists(char * filename, int indexNo){
 	int file_fd;
 	char iname[INAME_LEN];
@@ -102,7 +120,15 @@ bool_t AM_IndexExists(char * filename, int indexNo){
 }
 
 /*
-	returns TRUE if both 'attrType' and 'attrLength' are valid.
+	checks whether the given attribute type and attribute length are both valid
+
+	*** parameters ***
+	char attrType - type of the attribute
+	int attrLength - length of the given attribute
+
+	*** return values ***	
+	TRUE if both 'attrType' and 'attrLength' are valid.
+	FALSE otherwise
 */
 int AM_validAttr(char attrType, int attrLength){
 	if ((attrType != INT_TYPE) && (attrType != REAL_TYPE) && (attrType != STRING_TYPE)){
@@ -121,6 +147,12 @@ int AM_validAttr(char attrType, int attrLength){
 	return AME_INVALIDATTRLENGTH;
 }
 
+/* 
+	initialize the AM index table
+	- invoke HF_Init()
+	- initialize AM index table
+	- initialize AM scan table
+*/
 void AM_Init(void){
 	int i;
 
@@ -149,6 +181,15 @@ void AM_Init(void){
 	}
 }
 
+/* 
+	initializes the specified B+ tree node's header
+	
+	*** parameters ***
+	BtrHdr * hdr - pointer to the specified B+ tree node's header
+
+	*** return values ***
+	AME_OK if finished
+*/
 int Btr_initHdr(BtrHdr * hdr){
 	hdr->entries = 0;
 	hdr->parent.pagenum = NODE_NULLPTR; /* -1 */
@@ -157,32 +198,21 @@ int Btr_initHdr(BtrHdr * hdr){
 	return AME_OK;
 }
 
-int Btr_printNode(char * pbuf){
-	int * prt = (int *)pbuf;
-	printf("BtrHdr// entries: %d, parent.pagenum: %d, parent.recnum: %d, duplicate: %d // Ptr 0 // pagenum %d, recnum %d // Ptr 1 // pagenum %d, recnum %d //\n", *prt, *(prt+1), *(prt+2), *(prt+3),*(prt+4),*(prt+5),*(prt+6),*(prt+7));
-	return AME_OK;
-}
-/*
-   B+ tree Implementation
-    type: node type. 'r' for root, 'i' for internal node, 'l' for leaf node.
-	key: value
-	pointer:
-		RECID in leaf / internal nodes
-			internal nodes: RECID.pagenum used as pagenum for children nodes' pagenum
-				RECID.recnum = NODE_INTNULL (-2)
-				keyNum + 1 pointers to children nodes
-			leaf nodes: RECID actually pointing to the record of the original file
-				2 pointers to adjacent leaf nodes
-				keyNum pointers to actual record
-	*** way of determining number of entries ***
-	in the leaf node,
-		1. number of valid entries: sizeof(int)
-		2. pointer to previous, next leaf node: sizeof(int)
-		3. each entry's length is sizeof(RECID) + sizeof(value)
+/* 
+	assigns a new B+ tree node	
 
-	hence 4096 >= sizeof(BtrHdr) + 2 * sizeof(RECID) + NUM_ENT * (sizeof(RECID) + sizeof(value))
-	4096 - 13?(16?) - 16 = 4084 >= NUM_ENT * (sizeof(RECID) + sizeof(value))
-	NUM_ENT <= 4067 / (sizeof(RECID) + sizeof(value))
+	*** parameters ***
+	int pfd - file descriptor for the PF file table
+	char nodeType - type of the B+ tree node (root, internal, leaf)
+	int attrLength - attribute's length
+	int keyNum - the maximum number of keys a B+ tree node can contain
+	int * pagenum - pointer to the page number of newly assigned node if successful
+	char ** pbuf - address of the pointer to the newly assigned B+ tree node if successful
+	RECID parent - pointer to the parent of newly assigned B+ tree node 
+	
+	*** return values ***
+	AME_OK if successful
+	error codes (< 0) if a problem occurred
 */
 int Btr_assignNode(int pfd, char nodeType, int attrLength, int keyNum, int *pagenum, char ** pbuf, RECID parent){
 	int err;
@@ -196,16 +226,7 @@ int Btr_assignNode(int pfd, char nodeType, int attrLength, int keyNum, int *page
 
 	if ((err = PF_AllocPage(pfd, pagenum, pbuf)) == PFE_OK){
 		printf("Btr_assignNode: assigned page number: %d\n", *pagenum);
-		/* writeres = memcpy(pbuf, initnum, sizeof(int));
-		if (writeres == NULL){
-			printf("Btr_assignNode failed: 'writeres' == NULL??\n");
-			return AME_UNIX;
-		}
-		if (*writeres != 0){
-			printf("Btr_assignNode failed: written 'initnum' is %d??\n", *writeres);
-			return AME_PF;
-		}
-		*/
+		
 		bhdr = (BtrHdr *) *pbuf;
 		Btr_initHdr(bhdr);
 		/* setting parent information */
@@ -247,13 +268,24 @@ int Btr_assignNode(int pfd, char nodeType, int attrLength, int keyNum, int *page
 			return AME_INVALIDPARA;
 		}
 
-		/* return PF_UnpinPage(pfd, *pagenum, 1) == PFE_OK ? AME_OK : AME_PF; */
 		return AME_OK;
 	}
 
 	return AME_PF;
 }
 
+/* 
+	retrieves a pointer to the B+ tree node
+
+	*** parameters ***
+	char ** pbuf - address of the pointer to the specified B+ tree node if successful
+	int AM_fd - file descriptor of the AM index table
+	RECID adr - pointer to the specified B+ tree node
+	
+	*** return values ***
+	AME_OK if successful
+	error codes (< 0) if a problem occurred
+*/
 int Btr_getNode(char ** pbuf, int AM_fd, RECID adr){
 	int pfd = ait[AM_fd].pfd;
 
@@ -261,13 +293,23 @@ int Btr_getNode(char ** pbuf, int AM_fd, RECID adr){
 		printf("Btr_getNode failed: PF_GetThisPage \n");
 		return AME_PF;
 	}
-	/* return PF_UnpinPage(ait[AM_fd].pfd, adr.pagenum, 1) == PFE_OK? AME_OK : AME_PF; */
 	return AME_OK;
 }
 
 /*
-	LEAFIDX_PREV = -1
-	LEAFIDX_NEXT = -2
+	reads a pointer from a specified position of B+ tree node 
+
+	*** parameters ***
+	char ** pbuf - address to the B+ tree node
+	char nodeType - type of the node (root, internal, leaf)
+	int attrLength - attribute's length
+	int idx - position of the key
+	int keyNum - maximum number of keys a B+ tree node can contain
+	RECID * rid - points to the pointer to contain the values read from the B+ tree node	
+
+	*** return values ***
+	AME_OK if successful
+	error codes (< 0) if a problem occurred
 */
 int Btr_getPtr(char ** pbuf, char nodeType, int attrLength, int idx, int keyNum, RECID * rid){
 
@@ -315,6 +357,21 @@ int Btr_getPtr(char ** pbuf, char nodeType, int attrLength, int idx, int keyNum,
 	return AME_OK;
 }
 
+/*
+	reads a key from a specified position of B+ tree node
+
+	*** parameters ***
+	char ** pbuf - address to the B+ tree node
+	char nodeType - type of the node (root, internal, leaf)
+	int attrLength - attribute's length
+	int idx - position of the key
+	int keyNum - maximum number of keys a B+ tree node can contain
+	char * value - points to the value to contain the value read from the specified position	
+
+	*** return values ***
+	AME_OK if successful
+	error codes (< 0) if a problem occurred
+*/
 int Btr_getKey(char ** pbuf, char nodeType, int attrLength, int idx, int keyNum, char * value){
 	if ((nodeType == NODE_ROOT) || (nodeType == NODE_INT)){
 		if ((idx >= keyNum) || (idx < 0)){
@@ -341,6 +398,21 @@ int Btr_getKey(char ** pbuf, char nodeType, int attrLength, int idx, int keyNum,
 	return AME_OK;
 }
 
+/*
+	sets the pointer at a specified position of B+ tree node with a given pointer values 
+
+	*** parameters ***
+	char ** pbuf - address to the B+ tree node
+	char nodeType - type of the node (root, internal, leaf)
+	int attrLength - attribute's length
+	int idx - position of the key
+	int keyNum - maximum number of keys a B+ tree node can contain
+	RECID * rid - points to the pointer to be written at the specified position	
+
+	*** return values ***
+	AME_OK if successful
+	error codes (< 0) if a problem occurred
+*/
 int Btr_setPtr(char ** pbuf, char nodeType, int attrLength, int idx, int keyNum, RECID * rid){
 	RECID temp;
 	BtrHdr * bhdr = (BtrHdr *) pbuf;
@@ -391,6 +463,21 @@ int Btr_setPtr(char ** pbuf, char nodeType, int attrLength, int idx, int keyNum,
 	return AME_OK;
 }
 
+/*
+	sets the key at a specified position of B+ tree node with a given value
+
+	*** parameters ***
+	char ** pbuf - address to the B+ tree node
+	char nodeType - type of the node (root, internal, leaf)
+	int attrLength - attribute's length
+	int idx - position of the key
+	int keyNum - maximum number of keys a B+ tree node can contain
+	char * value - points to the value to be written at the specified position	
+
+	*** return values ***
+	AME_OK if successful
+	error codes (< 0) if a problem occurred
+*/
 int Btr_setKey(char ** pbuf, char nodeType, int attrLength, int idx, int keyNum, char * value){
 	if ((nodeType == NODE_ROOT) || (nodeType == NODE_INT)){
 		if ((idx >= keyNum) || (idx < 0)){
@@ -417,6 +504,20 @@ int Btr_setKey(char ** pbuf, char nodeType, int attrLength, int idx, int keyNum,
 	return AME_OK;
 }
 
+/*
+	creates an index 
+	
+	*** parameters ***
+	char * fileName - points to the specified file's name
+	int indexNo - index number for the specified file
+	char attrType - attribute type of the index
+	int attrLength - attribute length of the index
+	bool_t isUnique - specifies whether this index must be unique, set to FALSE	
+
+	*** return values ***
+	AME_OK if successful
+	error codes (< 0) if a problem occurred
+*/
 int AM_CreateIndex(char *fileName, int indexNo, char attrType, int attrLength, bool_t isUnique){
 	int err;
 	int pfd;
@@ -425,8 +526,8 @@ int AM_CreateIndex(char *fileName, int indexNo, char attrType, int attrLength, b
 	PFftab_ele *pfte;
 	char iname[INAME_LEN];
 	char cache[INAME_LEN];
-	int pagenum[3];
-	char * pbuf[3];
+	int pagenum[BTR_NODENUM_INIT];
+	char * pbuf[BTR_NODENUM_INIT];
 	RECID rid;
 	RECID parent;
 	RECID temp;
@@ -493,7 +594,6 @@ int AM_CreateIndex(char *fileName, int indexNo, char attrType, int attrLength, b
 		printf("AM_CreateIndex failed: Btr_setPtr at NODE_ROOT to second NODE_LEAF\n");
 		return err;
 	}
-	Btr_printNode(pbuf[0]);
 	/* second child(leaf) node */
 	if ((err = Btr_assignNode(pfd, NODE_LEAF, attrLength, keyNum, pagenum+2, &pbuf[2], parent)) != AME_OK){
 		printf("AM_CreateIndex failed: Btr_assignNode to second NODE_LEAF\n");
@@ -508,9 +608,6 @@ int AM_CreateIndex(char *fileName, int indexNo, char attrType, int attrLength, b
 		printf("AM_CreateIndex failed: Btr_setPtr at NODE_ROOT to second NODE_LEAF\n");
 		return err;
 	}
-	Btr_printNode(pbuf[0]);
-	Btr_printNode(pbuf[1]);
-	Btr_printNode(pbuf[2]);
 
 	if((err = PF_UnpinPage(pfd, pagenum[0], TRUE)) != PFE_OK){
 		printf("AM_CreateIndex failed: PF_UnpinPage of root node\n");
@@ -556,6 +653,17 @@ int AM_CreateIndex(char *fileName, int indexNo, char attrType, int attrLength, b
 	return PF_CloseFile(pfd) == PFE_OK ? AME_OK : AME_PF;
 }
 
+/*
+	destroys the specified index 
+	
+	*** parameters ***
+	char * fileName - points to the specified file's name
+	int indexNo - index number for the specified file
+
+	*** return values ***
+	AME_OK if successful
+	error codes (< 0) if a problem occurred
+*/
 int AM_DestroyIndex(char *fileName, int indexNo){
 	char iname[INAME_LEN];
 	char cache[INAME_LEN];
@@ -566,6 +674,17 @@ int AM_DestroyIndex(char *fileName, int indexNo){
 	return PF_DestroyFile(iname) == PFE_OK ? AME_OK : AME_PF;
 }
 
+/*
+	opens an AM index table entry
+	
+	*** parameters ***
+	char * fileName - points to the specified file's name
+	int indexNo - index number for the specified file
+
+	*** return values ***
+	AME_OK if successful
+	error codes (< 0) if a problem occurred
+*/
 int AM_OpenIndex(char *fileName, int indexNo){
 	int err;
 	int pfd;
@@ -608,6 +727,17 @@ int AM_OpenIndex(char *fileName, int indexNo){
 	return AME_FULLTABLE;
 }
 
+
+/* 
+	closes the specified AM index table entry
+
+	*** parameters ***
+	int AM_fd - file descriptor to the specified AM index table entry
+
+	*** return values ***
+	AME_OK if successful
+	error codes (< 0) if a problem occurred
+*/
 int AM_CloseIndex(int AM_fd){
 	int pfd = ait[AM_fd].pfd;
 	PFftab_ele * pfte = &(pft[pfd]);
@@ -639,6 +769,16 @@ int AM_CloseIndex(int AM_fd){
 	return AME_OK;
 }
 
+/*
+	tells if the specified B+ tree node is a leaf node 
+	
+	*** parameters ***
+	char * pbuf - pointer to a B+ tree node
+
+	*** return values ***
+	TRUE if specified B+ tree node is a leaf node
+	FALSE otherwise
+*/
 bool_t Btr_isLeaf(char * pbuf){
 	RECID res;
 	memcpy(&res, pbuf + sizeof(BtrHdr), sizeof(RECID));
@@ -649,10 +789,18 @@ bool_t Btr_isLeaf(char * pbuf){
 }
 
 /*
+	compares values, tell which one is bigger or smaller
+
+	*** parameters ***
+	char * a - points to a value to be compared
+	char * b - points to another value to be compared
+	char attrType - attribute type of a and b (must be the same)
+	int attrLength - attribute length of a and b (must be the same)
+
+	*** return values ***
 	BTR_LT(-1) if a < b
 	BTR_EQ(0) if a == b
 	BTR_GT(1) if a > b
-
 */
 int Btr_valComp(char * a, char * b, char attrType, int attrLength){
 	int err;
@@ -686,12 +834,20 @@ int Btr_valComp(char * a, char * b, char attrType, int attrLength){
    return AME_UNIX;
 }
 
-/* split at current node */
 /*
-   value - key which was supposed to be inserted
-   recId - recId of 'value'
-   adr - address of the current node
-   duplicate - whether this function was called due to duplicate values
+	performs split at specified node if necessary	
+	recursively called, copying values upward
+
+	*** parameters ***
+	int AM_fd - file descriptor of the AM index table
+	char * value - points to the value to be inserted in the specified node 
+	RECID recId - record id of the value to be inserted 
+	RECID adr -	pointer to the B+ tree node to split when needed
+	bool_t duplicate - tells whether a special split for duplicate values is needed
+
+	*** return values ***
+	AME_OK if successful
+	error codes (< 0) if a problem occurred
 */
 int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplicate){
 
@@ -1585,6 +1741,20 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 	return AME_PF;
 }
 
+/*
+	inserts the specified value in the B+ tree
+	recursively called
+
+	*** parameters ***
+	int AM_fd - file descriptor of the AM index table
+	char * value - points to the value to be inserted in B+ tree
+	RECID recId - record id of the value to be inserted 
+	RECID adr -	pointer to the B+ tree node to start searching 
+
+	*** return values ***
+	AME_OK if successful
+	error codes (< 0) if a problem occurred
+*/
 int Btr_recInsert(int AM_fd, char * value, RECID recId, RECID adr){
 	int err;
 	int entries;
@@ -1943,7 +2113,18 @@ int Btr_recInsert(int AM_fd, char * value, RECID recId, RECID adr){
 }
 
 
+/*
+	inserts the specified value in the B+ tree
 
+	*** parameters ***
+	int AM_fd - file descriptor of the AM index table
+	char * value - points to the value to be inserted in B+ tree
+	RECID recId - record id of the value to be inserted 
+
+	*** return values ***
+	AME_OK if successful
+	error codes (< 0) if a problem occurred
+*/
 int AM_InsertEntry(int AM_fd, char *value, RECID recId){
 	int err;
 
@@ -1961,6 +2142,19 @@ int AM_InsertEntry(int AM_fd, char *value, RECID recId){
 	return AME_OK;
 }
 
+/*
+	deletes the specified value in the B+ tree
+
+	*** parameters ***
+	int AM_fd - file descriptor of the AM index table
+	char * value - points to the value to be deleted in B+ tree
+	RECID recId - record id of the value to be deleted
+	RECID adr - pointer to the B+ tree node for this function to start searching
+
+	*** return values ***
+	AME_OK if successful
+	error codes (< 0) if a problem occurred
+*/
 int Btr_recDelete(int AM_fd, char * value, RECID recId, RECID adr){
 	int err;
 	int entries;
@@ -2049,15 +2243,15 @@ int Btr_recDelete(int AM_fd, char * value, RECID recId, RECID adr){
 								printf("Btr_recDelete failed: moving %d th ptr of current leaf node left\n", j);
 								return err;
 							}
-							if (j == (entries - 1)){printf("set1\n");
+							if (j == (entries - 1)){
 								if ((err = Btr_setKey(&pbuf, NODE_LEAF, amhdr->attrLength, j, amhdr->maxKeys, value_empty)) != AME_OK){
 									printf("Btr_recDelete failed: deleting %d th value of current leaf node left\n", j);
 									return err;
-								}printf("set2\n");
+								}
 								if ((err = Btr_setPtr(&pbuf, NODE_LEAF, amhdr->attrLength, (j+1), amhdr->maxKeys, &rid_empty)) != AME_OK){
 									printf("Btr_recDelete failed: deleting %d th ptr of current leaf node left\n", j);
 									return err;
-								}printf("set3\n");
+								}
 							} else {
 								if ((err = Btr_setKey(&pbuf, NODE_LEAF, amhdr->attrLength, j, amhdr->maxKeys, tempValue)) != AME_OK){
 									printf("Btr_recDelete failed: moving %d th value of current leaf node left\n", j);
@@ -2071,7 +2265,7 @@ int Btr_recDelete(int AM_fd, char * value, RECID recId, RECID adr){
 						if((err = PF_UnpinPage(ait[AM_fd].pfd, adr.pagenum, TRUE)) != PFE_OK){
 							printf("cBtr_recDelete failed: PF_UnpinPage of adr\n");
 							return err;
-						}printf("return 1\n");
+						}
 						return AME_OK;
 					} else if (bhdr->duplicate == TRUE){
 						continue;
@@ -2101,7 +2295,7 @@ int Btr_recDelete(int AM_fd, char * value, RECID recId, RECID adr){
 			if((err = PF_UnpinPage(ait[AM_fd].pfd, adr.pagenum, TRUE)) != PFE_OK){
 				printf("aBtr_recDelete failed: PF_UnpinPage of adr\n");
 				return err;
-			}printf("return 0\n");
+			}
 			return AME_OK;
 		}
 	} /* at internal node */
@@ -2148,6 +2342,18 @@ int Btr_recDelete(int AM_fd, char * value, RECID recId, RECID adr){
 	return AME_PF;
 }
 
+/*
+	deletes the specified entry in the B+ tree index
+
+	*** parameters ***
+	int AM_fd - file descriptor of the AM index table
+	char * value - points to the value to be deleted in B+ tree
+	RECID recId - record id of the value to be deleted
+
+	*** return values ***
+	AME_OK if successful
+	error codes (< 0) if a problem occurred
+*/
 int AM_DeleteEntry(int AM_fd, char *value, RECID recId){
 	int err;
 
@@ -2159,12 +2365,24 @@ int AM_DeleteEntry(int AM_fd, char *value, RECID recId){
 	/* search begins at root node */
 	if ((err = Btr_recDelete(AM_fd, value, recId, ait[AM_fd].hdr.root)) != AME_OK){
 		printf("AM_DeleteEntry failed: Btr_recDelete\n");
-		return AME_PF;
+		return err;
 	}
 
 	return AME_OK;
 }
 
+/* 
+	retrieves the first valid value in the B+ tree
+
+	*** parameters ***
+	int fd - file descriptor of the AM index table
+	char ** record - address of the space where value will be copied once found
+	RECID * nodeAdr - points to the RECID of the value's position
+
+	*** return values ***
+	RECID of the given value if successful
+	RECID containing NODE_NULLPTR(-1) if a problem occurred
+*/
 RECID Btr_getFirstValue(int fd, char ** record, RECID * nodeAdr){
 	int err;
 
@@ -2257,6 +2475,18 @@ RECID Btr_getFirstValue(int fd, char ** record, RECID * nodeAdr){
 	}
 }
 
+/*
+	finds the record id of the specified value 
+
+	*** parameters ***
+	int fd - file descriptor for the AM index table
+	RECID recId - RECID of the given value to find
+	char * record_in - points to the record to be found in B+ tree	
+
+	*** return values ***
+	RECID of the specified value if successful
+	RECID containing NODE_NULLPTR(-1) if a problem occurred
+*/
 RECID Btr_getThisValue(int fd, RECID recId, char * record_in){
 	int err, result, i, j, entries;
 
@@ -2368,6 +2598,18 @@ RECID Btr_getThisValue(int fd, RECID recId, char * record_in){
 	return res;
 }
 
+/* 
+	finds the next value in the B+ tree
+
+	*** parameters ***
+	int fd - file descriptor for the AM index table
+	char ** record_out - address of the space where next value will be written at if found
+	RECID * nodeAdr - position of the current record in the B+ tree, updated when a next value is found
+
+	*** return value ***
+	RECID of the next value if successful
+	RECID containing NODE_NULLPTR(-1) if a problem occurred
+*/
 RECID Btr_getNextValue(int fd, char ** record_out, RECID * nodeAdr){
 	int err, i, j, entries;
 
@@ -2457,15 +2699,26 @@ RECID Btr_getNextValue(int fd, char ** record_out, RECID * nodeAdr){
 			if((err = PF_UnpinPage(ait[fd].pfd, nodeAdr->pagenum, TRUE)) != PFE_OK){
 				printf("cBtr_getNextValue failed: PF_UnpinPage of leaf\n");
 				return res;
-			} printf("ret0\n");
+			} 
 			return tempRid;
 		}
-	}printf("ret1\n");
+	}
 	return res;
 }
 
 
+/*
+	opens an AM scan table entry for a scan
 
+	*** parameters ***
+	int AM_fd - file descriptor for the AM index table
+	int op - comparison operator
+	char * value - value for comparison 
+
+	*** return values ***
+	index of the AM scan table entry if successful
+	AME_SCANTABLEFULL if AM scan table is already full
+*/
 int AM_OpenIndexScan(int AM_fd, int op, char *value){
 	int asd;
 
@@ -2475,7 +2728,6 @@ int AM_OpenIndexScan(int AM_fd, int op, char *value){
 			ast[asd].fd = AM_fd;
 			ast[asd].attrType = ait[AM_fd].hdr.attrType;
 			ast[asd].attrLength = ait[AM_fd].hdr.attrLength;
-			/*ast[asd].attrOffset = ait[AM_fd].hdr.attrOffset;*/
 			ast[asd].op = op;
 			ast[asd].value = value;
 			ast[asd].current.pagenum = AME_SCANOPEN;
@@ -2486,6 +2738,16 @@ int AM_OpenIndexScan(int AM_fd, int op, char *value){
 	return AME_SCANTABLEFULL;
 }
 
+/*
+	finds the an entry of the index next to the entry of specified scan descriptor
+
+	*** parameters ***
+	int scanDesc - scan descriptor of the index to find the next entry
+	
+	*** return values ***
+	RECID of the next entry if successful
+	RECID containing NODE_NULLPTR(-1) if a problem occurred	
+*/
 RECID AM_FindNextEntry(int scanDesc){
 	RECID recid = ast[scanDesc].current;
 	int op = ast[scanDesc].op;
@@ -2497,7 +2759,7 @@ RECID AM_FindNextEntry(int scanDesc){
 	RECID rec_err;
 	RECID nodeAdr = ast[scanDesc].currentNode;
 	rec_err.pagenum = NODE_NULLPTR;
-	rec_err.recnum = -1;
+	rec_err.recnum = NODE_NULLPTR;
 
 	while(!match) {
 		printf("getNextValue: %d, %d / %d, %d\n", recid.pagenum, recid.recnum, nodeAdr.pagenum, nodeAdr.recnum);
@@ -2526,7 +2788,7 @@ RECID AM_FindNextEntry(int scanDesc){
 
 		if(value == NULL) match = 1;
 		else if (ast[scanDesc].attrType == 'c'){
-			int result = strncmp(record + ast[scanDesc].attrOffset, value, ast[scanDesc].attrLength);
+			int result = strncmp(record, value, ast[scanDesc].attrLength);
 
 			if (op == 1) match = result == 0;
 			else if (op == 2) match = result < 0;
@@ -2538,7 +2800,7 @@ RECID AM_FindNextEntry(int scanDesc){
 		} else if (ast[scanDesc].attrType == 'i'){
 
 			int src, dst;
-			if (memcpy(&src, record + ast[scanDesc].attrOffset, ast[scanDesc].attrLength) == NULL || memcpy(&dst, value, ast[scanDesc].attrLength) == NULL) {
+			if (memcpy(&src, record, ast[scanDesc].attrLength) == NULL || memcpy(&dst, value, ast[scanDesc].attrLength) == NULL) {
                 return rec_err;
             }
 
@@ -2551,7 +2813,7 @@ RECID AM_FindNextEntry(int scanDesc){
             else return rec_err;
 		} else if (ast[scanDesc].attrType == 'f'){
 			float src, dst;
-			if (memcpy(&src, record + ast[scanDesc].attrOffset, ast[scanDesc].attrLength) == NULL || memcpy(&dst, value, ast[scanDesc].attrLength) == NULL) {
+			if (memcpy(&src, record, ast[scanDesc].attrLength) == NULL || memcpy(&dst, value, ast[scanDesc].attrLength) == NULL) {
                 return rec_err;
             }
 
@@ -2570,11 +2832,29 @@ RECID AM_FindNextEntry(int scanDesc){
 	return recid;
 }
 
+/* 
+	closes the specified scan 
+	
+	*** parameters ***
+	int scanDesc - scan descriptor of the index to be closed
+
+	*** return values ***
+	AME_OK when closing is finished
+*/
 int AM_CloseIndexScan(int scanDesc){
 	ast[scanDesc].valid = FALSE;
 	return AME_OK;
 }
 
+/* 
+	prints the given error message
+
+	*** parameters ***
+	char * errString - pointer to the given error message
+
+	*** return values ***
+	void	
+*/
 void AM_PrintError(char *errString){
 	fprintf(stderr, "%s\n", errString);
 }
