@@ -1549,6 +1549,10 @@ int Btr_recInsert(int AM_fd, char * value, RECID recId, RECID adr){
 				printf("Btr_recInsert failed: this node is full of duplicate values!!\n");
 				return AME_TOOMANYRECSPERKEY;
 			}
+			if ((err = PF_UnpinPage(ait[AM_fd].pfd, adr.pagenum, TRUE)) != PFE_OK){
+				printf("Btr_recInsert failed: PF_UnpinPage of adr\n");
+				return err;
+			}
 
 			/* split */
 			if ((err = Btr_recSplit(AM_fd, value, recId, adr, FALSE)) != AME_OK){
@@ -1582,6 +1586,10 @@ int Btr_recInsert(int AM_fd, char * value, RECID recId, RECID adr){
 						continue;
 					} else {
 						/* otherwise, split for duplicate values */
+						if ((err = PF_UnpinPage(ait[AM_fd].pfd, adr.pagenum, TRUE)) != PFE_OK){
+							printf("Btr_recInsert failed: PF_UnpinPage of adr\n");
+							return err;
+						}
 						if ((err = Btr_recSplit(AM_fd, value, recId, adr, TRUE)) != AME_OK){
 							printf("Btr_recInsert failed: Btr_recSplit for duplicate values at node %d\n", adr.pagenum);
 							return err;
@@ -1610,7 +1618,7 @@ int Btr_recInsert(int AM_fd, char * value, RECID recId, RECID adr){
 						}
 
 						/* assign a new node, adjust links */
-						if ((err = Btr_assignNode(ait[AM_fd].pfd, NODE_LEAF, amhdr->attrLength, amhdr->maxKeys, &newNode, pbuf_new, tempRid_par)) != AME_OK){
+						if ((err = Btr_assignNode(ait[AM_fd].pfd, NODE_LEAF, amhdr->attrLength, amhdr->maxKeys, &newNode, &pbuf_new, tempRid_par)) != AME_OK){
 							printf("Btr_recInsert failed: assigning a new leaf node\n");
 							return err;
 						}
@@ -1660,6 +1668,18 @@ int Btr_recInsert(int AM_fd, char * value, RECID recId, RECID adr){
 						ait[AM_fd].hdrchanged = TRUE;
 
 						/* copy up the value with key toward the new node */
+						if ((err = PF_UnpinPage(ait[AM_fd].pfd, tempRid_par.pagenum, TRUE)) != PFE_OK){
+							printf("Btr_recInsert failed: PF_UnpinPage of adr\n");
+							return err;
+						}
+						if ((err = PF_UnpinPage(ait[AM_fd].pfd, tempRid_nbr.pagenum, TRUE)) != PFE_OK){
+							printf("Btr_recInsert failed: PF_UnpinPage of adr\n");
+							return err;
+						}
+						if ((err = PF_UnpinPage(ait[AM_fd].pfd, adr.pagenum, TRUE)) != PFE_OK){
+							printf("Btr_recInsert failed: PF_UnpinPage of adr\n");
+							return err;
+						}
 						tempRid_new.recnum = NODE_INTNULL;
 						if ((err = Btr_recSplit(AM_fd, value, tempRid_new, tempRid_par, FALSE)) != AME_OK){
 							printf("Btr_recInsert failed: copying up the value with ptr to the new leaf node\n");
@@ -1719,6 +1739,10 @@ int Btr_recInsert(int AM_fd, char * value, RECID recId, RECID adr){
 				return AME_UNIX;
 			}
 			*/
+			if ((err = PF_UnpinPage(ait[AM_fd].pfd, adr.pagenum, TRUE)) != PFE_OK){
+				printf("Btr_recInsert failed: PF_UnpinPage of adr\n");
+				return err;
+			}
 			return AME_OK;
 		}
 	} /* at internal node */
@@ -1758,6 +1782,10 @@ int Btr_recInsert(int AM_fd, char * value, RECID recId, RECID adr){
 			}
 			printf("adr updated: pagenum %d, recnum %d\n", adr.pagenum, adr.recnum);
 			printf("zero entry 3\n");
+			if((err = PF_UnpinPage(ait[AM_fd].pfd, adr.pagenum, TRUE)) != PFE_OK){
+				printf("Btr_recInsert failed: PF_UnpinPage of adr\n");
+				return err;
+			}
 			return Btr_recInsert(AM_fd, value, recId, adr);
 		} /* node is not empty, find the way */
 		else {
@@ -1818,6 +1846,10 @@ int Btr_recInsert(int AM_fd, char * value, RECID recId, RECID adr){
 				}
 				entries++;
 				bhdr->entries = entries;
+				if((err = PF_UnpinPage(ait[AM_fd].pfd, adr.pagenum, TRUE)) != PFE_OK){
+					printf("Btr_recInsert failed: PF_UnpinPage of adr\n");
+					return err;
+				}
 				return AME_OK;
 			} /* the inserted value is from actual record. proceed to child nodes */
 			else {
@@ -1827,6 +1859,10 @@ int Btr_recInsert(int AM_fd, char * value, RECID recId, RECID adr){
 					return err;
 				}
 				printf("adr updated: pagenum %d, recnum %d\n", adr.pagenum, adr.recnum);
+				if((err = PF_UnpinPage(ait[AM_fd].pfd, adr.pagenum, TRUE)) != PFE_OK){
+					printf("Btr_recInsert failed: PF_UnpinPage of adr\n");
+					return err;
+				}
 				return Btr_recInsert(AM_fd, value, recId, adr);
 			}
 		}
@@ -1943,11 +1979,19 @@ int Btr_recDelete(int AM_fd, char * value, RECID recId, RECID adr){
 						bhdr->entries--;
 						amhdr->numRecs--;
 						ait[AM_fd].hdrchanged = TRUE;
+						if((err = PF_UnpinPage(ait[AM_fd].pfd, adr.pagenum, TRUE)) != PFE_OK){
+							printf("Btr_recDelete failed: PF_UnpinPage of adr\n");
+							return err;
+						}
 						return AME_OK;
 					} else if (bhdr->duplicate == TRUE){
 						continue;
 					} else {
 						printf("Btr_recDelete failed(looking for value): value found, recId not matching\n");
+						if((err = PF_UnpinPage(ait[AM_fd].pfd, adr.pagenum, TRUE)) != PFE_OK){
+							printf("Btr_recDelete failed: PF_UnpinPage of adr\n");
+							return err;
+						}
 						return AME_RECNOTFOUND;
 					}
 
@@ -1964,6 +2008,10 @@ int Btr_recDelete(int AM_fd, char * value, RECID recId, RECID adr){
 			} else {
 				printf("Btr_recDelete failed: given value not found\n");
 				return AME_KEYNOTFOUND;
+			}
+			if((err = PF_UnpinPage(ait[AM_fd].pfd, adr.pagenum, TRUE)) != PFE_OK){
+				printf("Btr_recDelete failed: PF_UnpinPage of adr\n");
+				return err;
 			}
 			return AME_OK;
 		}
@@ -1998,6 +2046,10 @@ int Btr_recDelete(int AM_fd, char * value, RECID recId, RECID adr){
 				return err;
 			}
 			printf("adr updated: pagenum %d, recnum %d\n", adr.pagenum, adr.recnum);
+			if((err = PF_UnpinPage(ait[AM_fd].pfd, adr.pagenum, TRUE)) != PFE_OK){
+				printf("Btr_recDelete failed: PF_UnpinPage of adr\n");
+				return err;
+			}
 			return Btr_recDelete(AM_fd, value, recId, adr);
 		}
 	}
@@ -2021,10 +2073,11 @@ int AM_DeleteEntry(int AM_fd, char *value, RECID recId){
 	return AME_OK;
 }
 
-RECID Btr_getFirstValue(int fd, char * record, RECID * nodeAdr){
+RECID Btr_getFirstValue(int fd, char ** record, RECID * nodeAdr){
 	int err;
 
 	RECID tempRid;
+	RECID tempRid2;
 	RECID res;
 	char * tempValue = (char *)calloc(ait[fd].hdr.attrLength, sizeof(char));
 
@@ -2041,12 +2094,24 @@ RECID Btr_getFirstValue(int fd, char * record, RECID * nodeAdr){
 	}
 	bhdr = (BtrHdr *) pbuf;
 
+	if((err = PF_UnpinPage(ait[fd].pfd, amhdr->root.pagenum, TRUE)) != PFE_OK){
+		printf("Btr_getFirstValue failed: PF_UnpinPage of root\n");
+		return res;
+	}
+	tempRid.pagenum = NODE_NULLPTR;
 	while(Btr_isLeaf(pbuf) != TRUE){
+		if (tempRid.pagenum != NODE_NULLPTR){
+			if((err = PF_UnpinPage(ait[fd].pfd, tempRid.pagenum, TRUE)) != PFE_OK){
+				printf("Btr_getFirstValue failed: PF_UnpinPage of root\n");
+				return res;
+			}
+		}
 		/* proceed to leftmost child nodes */
 		if ((err = Btr_getPtr(&pbuf, NODE_INT, amhdr->attrLength, 0, amhdr->maxKeys, &tempRid)) != AME_OK){
 			printf("Btr_getFirstValue failed: receiving pointer to a leftmost child node\n");
 			return res;
 		}
+		
 		if ((err = Btr_getNode(&pbuf, fd, tempRid)) != AME_OK){
 			printf("Btr_getFirstValue failed: Btr_getNode to a leftmost child node\n");
 			return res;
@@ -2063,13 +2128,23 @@ RECID Btr_getFirstValue(int fd, char * record, RECID * nodeAdr){
 				printf("Btr_getFirstValue failed: receiving pointer of leaf node\n");
 				return res;
 			}
-			if ((err = Btr_getKey(&pbuf, NODE_LEAF, amhdr->attrLength, 0, amhdr->maxKeys, record)) != AME_OK){
+			if ((err = Btr_getKey(&pbuf, NODE_LEAF, amhdr->attrLength, 0, amhdr->maxKeys, &record)) != AME_OK){
 				printf("Btr_getFirstValue failed: receiving key of leaf node\n");
+				return res;
+			}
+			if((err = PF_UnpinPage(ait[fd].pfd, nodeAdr->pagenum, TRUE)) != PFE_OK){
+				printf("Btr_getFirstValue failed: PF_UnpinPage of root\n");
 				return res;
 			}
 
 			return tempRid;
 		} else {
+			tempRid2.pagenum = tempRid.pagenum;
+			tempRid2.recnum = tempRid.recnum;
+			if((err = PF_UnpinPage(ait[fd].pfd, tempRid2.pagenum, TRUE)) != PFE_OK){
+				printf("Btr_getFirstValue failed: PF_UnpinPage of leaf\n");
+				return res;
+			}
 			/* retrieve pointer to the NEXT leaf node, check validity */
 			if ((err = Btr_getPtr(&pbuf, NODE_LEAF, amhdr->attrLength, LEAFIDX_NEXT, amhdr->maxKeys, &tempRid)) != AME_OK){
 				printf("Btr_getFirstValue failed: receiving pointer to NEXT leaf node\n");
@@ -2094,6 +2169,7 @@ RECID Btr_getThisValue(int fd, RECID recId, char * record_in){
 	int err, result, i, j, entries;
 
 	RECID tempRid;
+	RECID tempRid2;
 	RECID tempRid_nbr;
 	RECID tempRec;
 	RECID res;
@@ -2142,6 +2218,13 @@ RECID Btr_getThisValue(int fd, RECID recId, char * record_in){
 			}
 			/* proceed to child nodes */
 			/* receiving pointer information */
+			tempRid2.pagenum = tempRid.pagenum;
+			tempRid2.recnum = tempRid.recnum;
+
+			if((err = PF_UnpinPage(ait[fd].pfd, tempRid2.pagenum, TRUE)) != PFE_OK){
+				printf("Btr_getThisValue failed: PF_UnpinPage of leaf\n");
+				return res;
+			}
 			if ((err = Btr_getPtr(&pbuf, NODE_INT, amhdr->attrLength, i, amhdr->maxKeys, &tempRid)) != AME_OK){
 				printf("Btr_getThisValue failed: receiving pointer for a child node\n");
 				return res;
@@ -2169,6 +2252,13 @@ RECID Btr_getThisValue(int fd, RECID recId, char * record_in){
 				return res;
 			}
 			if ((tempRec.pagenum == recId.pagenum) && (tempRec.recnum == recId.recnum)){
+				tempRid2.pagenum = tempRid.pagenum;
+				tempRid2.recnum = tempRid.recnum;
+
+				if((err = PF_UnpinPage(ait[fd].pfd, tempRid2.pagenum, TRUE)) != PFE_OK){
+					printf("Btr_getThisValue failed: PF_UnpinPage of leaf\n");
+					return res;
+				}
 				res.pagenum = tempRid.pagenum;
 				res.recnum = i;
 				return res;
@@ -2186,10 +2276,11 @@ RECID Btr_getThisValue(int fd, RECID recId, char * record_in){
 	return res;
 }
 
-RECID Btr_getNextValue(int fd, char * record_out, RECID * nodeAdr){
+RECID Btr_getNextValue(int fd, char ** record_out, RECID * nodeAdr){
 	int err, i, j, entries;
 
 	RECID tempRid;
+	RECID tempRid2;
 	RECID tempRec;
 	RECID res;
 	char * tempValue = (char *)calloc(ait[fd].hdr.attrLength, sizeof(char));
@@ -2212,7 +2303,7 @@ RECID Btr_getNextValue(int fd, char * record_out, RECID * nodeAdr){
 
 	/* another value in the same leaf node */
 	if (tempRid.recnum + 1 < bhdr->entries){
-		if ((err = Btr_getKey(&pbuf, NODE_LEAF, amhdr->attrLength, tempRid.recnum + 1, amhdr->maxKeys, record_out)) != AME_OK){
+		if ((err = Btr_getKey(&pbuf, NODE_LEAF, amhdr->attrLength, tempRid.recnum + 1, amhdr->maxKeys, &record_out)) != AME_OK){
 			printf("Btr_getNextValue failed: retrieving %d th value of current leaf node\n", tempRid.recnum + 1);
 			return res;
 		}
@@ -2221,11 +2312,25 @@ RECID Btr_getNextValue(int fd, char * record_out, RECID * nodeAdr){
 			return res;
 		}
 		nodeAdr->recnum++;
+		tempRid2.pagenum = tempRid.pagenum;
+		tempRid2.recnum = tempRid.recnum;
+
+		if((err = PF_UnpinPage(ait[fd].pfd, tempRid2.pagenum, TRUE)) != PFE_OK){
+			printf("Btr_getNextValue failed: PF_UnpinPage of leaf\n");
+			return res;
+		}
 		return tempRec;
 	}
 
 
 	while(TRUE){
+		tempRid2.pagenum = tempRid.pagenum;
+		tempRid2.recnum = tempRid.recnum;
+
+		if((err = PF_UnpinPage(ait[fd].pfd, tempRid2.pagenum, TRUE)) != PFE_OK){
+			printf("Btr_getNextValue failed: PF_UnpinPage of leaf\n");
+			return res;
+		}
 		/* retrieve pointer to the NEXT leaf node, check validity */
 		if ((err = Btr_getPtr(&pbuf, NODE_LEAF, amhdr->attrLength, LEAFIDX_NEXT, amhdr->maxKeys, &tempRid)) != AME_OK){
 			printf("Btr_getNextValue failed: receiving pointer to NEXT leaf node\n");
@@ -2236,6 +2341,7 @@ RECID Btr_getNextValue(int fd, char * record_out, RECID * nodeAdr){
 			printf("Btr_getNextValue failed: remaining B+ tree nodes are empty\n");
 			return res;
 		} else {
+			
 			/* move to the NEXT leaf node */
 			if ((err = Btr_getNode(&pbuf, fd, tempRid)) != AME_OK){
 				printf("Btr_getNextValue failed: Btr_getNode to NEXT leaf node\n");
@@ -2252,8 +2358,12 @@ RECID Btr_getNextValue(int fd, char * record_out, RECID * nodeAdr){
 				printf("Btr_getNextValue failed: receiving pointer of leaf node\n");
 				return res;
 			}
-			if ((err = Btr_getKey(&pbuf, NODE_LEAF, amhdr->attrLength, 0, amhdr->maxKeys, record_out)) != AME_OK){
+			if ((err = Btr_getKey(&pbuf, NODE_LEAF, amhdr->attrLength, 0, amhdr->maxKeys, &record_out)) != AME_OK){
 				printf("Btr_getNextValue failed: receiving key of leaf node\n");
+				return res;
+			}
+			if((err = PF_UnpinPage(ait[fd].pfd, tempRid.pagenum, TRUE)) != PFE_OK){
+				printf("Btr_getNextValue failed: PF_UnpinPage of leaf\n");
 				return res;
 			}
 			return tempRid;
@@ -2299,7 +2409,7 @@ RECID AM_FindNextEntry(int scanDesc){
 
 	while(!match) {
 		if (recid.pagenum == AME_SCANOPEN && recid.recnum == AME_SCANOPEN) {
-			recid = Btr_getFirstValue(ast[scanDesc].fd, record, &nodeAdr);
+			recid = Btr_getFirstValue(ast[scanDesc].fd, &record, &nodeAdr);
 		}
 		else {
 			/* copy from record to record_temp */
@@ -2312,7 +2422,7 @@ RECID AM_FindNextEntry(int scanDesc){
 				printf("AM_FindNextEntry failed: memset to 'record'\n");
 				return rec_err;
 			}
-			recid = Btr_getNextValue(ast[scanDesc].fd, record, &nodeAdr);
+			recid = Btr_getNextValue(ast[scanDesc].fd, &record, &nodeAdr);
 		}
 
 		if (recid.pagenum == -1) {
