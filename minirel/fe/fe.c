@@ -599,9 +599,13 @@ int  DropIndex(char *relname, char *attrName) {
     recId = HF_FindNextRec(sd, &attr);
     while (HF_ValidRecId(afd, recId)) {
         if (attrName == NULL) {
-            AM_DestroyIndex (filename, attr.attrno);
+            if (AM_DestroyIndex (filename, attr.attrno) != AME_OK) {
+                return FEE_AM;
+            }
         } else if (strcmp(attr.attrname, attrName) == 0) {
-            AM_DestroyIndex (filename, attr.attrno);
+            if (AM_DestroyIndex (filename, attr.attrno) != AME_OK) {
+                return FEE_AM;
+            }
             break;
         }
 
@@ -609,13 +613,66 @@ int  DropIndex(char *relname, char *attrName) {
     }
 
     free(filename);
-    HF_CloseFileScan(sd);
+    if (HF_CloseFileScan(sd) != HFE_OK) {
+        return FEE_HF;
+    }
 
     return FEE_OK;
 }
 
 int  LoadTable(char *relName, char *fileName) {
+    char *filename, *record;
+    int fd, sd;
+    FILE *fp = fopen(fileName, "r");
+    RELDESCTYPE rel;
+    ATTRDESCTYPE attr;
+    RECID recId;
 
+    /* check load file. */
+    if (fp == NULL) return FEE_UNIX;
+
+    /* Find relcat. */
+    if ((sd = HF_OpenFileScan(rfd, STRING_TYPE, MAXNAME, 0, EQ_OP, relName)) < 0) return FEE_HF;
+
+    recId = HF_FindNextRec(sd, &rel);
+    if (!HF_ValidRecId(rfd, recId)) return FEE_HF;
+
+    if (HF_CloseFileScan(sd) != HFE_OK) return FEE_HF;
+
+    /* Open HF file. */
+    filename = (char *) malloc (sizeof(char) * length);
+    sprintf(filename, "%s/%s", dbname, RELCATNAME);
+    if ((fd = HF_OpenFile(filename)) < 0) return FEE_HF;
+
+    /* Insert records. */
+    record = (char *) malloc (sizeof(char) * rel.relwid);
+    while (fread(record, rel.relwid, 1, FP) != rel.relwid) {
+        if (!HF_ValidRecId(fd, HF_InsertRec(fd, record))) return FEE_HF;
+    }
+
+    if (HF_CloseFile(fd) != HFE_OK) return FEE_HF;
+
+    /* Find attrcat. */
+    if ((sd = HF_OpenFileScan(afd, STRING_TYPE, MAXNAME, 0, EQ_OP, relName)) < 0) return FEE_HF;
+
+    recId = HF_FindNextRec(sd, &attr);
+    while (HF_ValidRecId(afd, recId)) {
+        if (!attr.indexed) {
+            recId = HF_FindNextRec(sd, &attr);
+            continue;
+        }
+
+        recId = HF_FindNextRec(sd, &attr);
+    }
+
+    if (HF_CloseFileScan(sd) != HFE_OK) return FEE_HF;
+
+
+
+
+    free(record);
+    free(filename);
+    fclose(fp);
 }
 
 int  HelpTable(char *relName) {
