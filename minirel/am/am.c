@@ -148,7 +148,8 @@ int Btr_initHdr(BtrHdr * hdr){
 }
 
 int Btr_printNode(char * pbuf){
-	printf("BtrHdr// entries: %d, parent.pagenum: %d, parent.recnum: %d, duplicate: %d // Ptr 0 // pagenum %d, recnum %d // Ptr 1 // pagenum %d, recnum %d //\n");
+	int * prt = (int *)pbuf;
+	printf("BtrHdr// entries: %d, parent.pagenum: %d, parent.recnum: %d, duplicate: %d // Ptr 0 // pagenum %d, recnum %d // Ptr 1 // pagenum %d, recnum %d //\n", *prt, *(prt+1), *(prt+2), *(prt+3),*(prt+4),*(prt+5),*(prt+6),*(prt+7));
 	return AME_OK;
 }
 /*
@@ -173,7 +174,7 @@ int Btr_printNode(char * pbuf){
 	4096 - 13?(16?) - 16 = 4084 >= NUM_ENT * (sizeof(RECID) + sizeof(value))
 	NUM_ENT <= 4067 / (sizeof(RECID) + sizeof(value))
 */
-int Btr_assignNode(int pfd, char nodeType, int attrLength, int keyNum, int *pagenum, char * pbuf, RECID parent){
+int Btr_assignNode(int pfd, char nodeType, int attrLength, int keyNum, int *pagenum, char ** pbuf, RECID parent){
 	int err;
 	int initnum = 0;
 	int *writeres;
@@ -183,7 +184,7 @@ int Btr_assignNode(int pfd, char nodeType, int attrLength, int keyNum, int *page
 
 	initRid.pagenum = NODE_NULLPTR;
 
-	if ((err = PF_AllocPage(pfd, pagenum, &pbuf)) == PFE_OK){
+	if ((err = PF_AllocPage(pfd, pagenum, pbuf)) == PFE_OK){
 		printf("assigned page number: %d\n", *pagenum);
 		/* writeres = memcpy(pbuf, initnum, sizeof(int));
 		if (writeres == NULL){
@@ -195,7 +196,7 @@ int Btr_assignNode(int pfd, char nodeType, int attrLength, int keyNum, int *page
 			return AME_PF;
 		}
 		*/
-		bhdr = (BtrHdr *) pbuf;
+		bhdr = (BtrHdr *) *pbuf;
 		Btr_initHdr(bhdr);
 		/* setting parent information */
 		bhdr->parent.pagenum = parent.pagenum;
@@ -204,29 +205,29 @@ int Btr_assignNode(int pfd, char nodeType, int attrLength, int keyNum, int *page
 		if ((nodeType == NODE_ROOT) || (nodeType == NODE_INT)){
 			initRid.recnum = NODE_INTNULL;
 			for (i = 0; i < keyNum; i++){
-				if (memcpy(pbuf + sizeof(BtrHdr) + i * (sizeof(RECID) + attrLength), &initRid, sizeof(RECID)) == NULL){
+				if (memcpy(*pbuf + sizeof(BtrHdr) + i * (sizeof(RECID) + attrLength), &initRid, sizeof(RECID)) == NULL){
 					printf("Btr_assignNode failed: 'memcpy' for assigning internal node entries at %d th iteration\n", i);
 					return AME_UNIX;
 				}
 			}
-			if (memcpy(pbuf + sizeof(BtrHdr) + keyNum * (sizeof(RECID) + attrLength), &initRid, sizeof(RECID)) == NULL){
+			if (memcpy(*pbuf + sizeof(BtrHdr) + keyNum * (sizeof(RECID) + attrLength), &initRid, sizeof(RECID)) == NULL){
 				printf("Btr_assignNode failed: 'memcpy' for assigning last pointer for internal node\n");
 				return AME_UNIX;
 			}
 		}/* leaf node */
 		else if (nodeType == NODE_LEAF){
 			initRid.recnum = NODE_NULLPTR;
-			if (memcpy(pbuf + sizeof(BtrHdr), &initRid, sizeof(RECID)) == NULL){
+			if (memcpy(*pbuf + sizeof(BtrHdr), &initRid, sizeof(RECID)) == NULL){
 				printf("Btr_assignNode failed: first pointer to adjacent leaf node\n");
 				return AME_UNIX;
 			}
 			for (i = 0; i < keyNum; i++){
-				if (memcpy(pbuf + sizeof(BtrHdr) + sizeof(RECID) + i * (sizeof(RECID) + attrLength), &initRid, sizeof(RECID)) == NULL){
+				if (memcpy(*pbuf + sizeof(BtrHdr) + sizeof(RECID) + i * (sizeof(RECID) + attrLength), &initRid, sizeof(RECID)) == NULL){
 					printf("Btr_assignNode failed: 'memcpy' for assigning leaf node entries at %d th iteration\n", i);
 					return AME_UNIX;
 				}
 			}
-			if (memcpy(pbuf + sizeof(BtrHdr) + sizeof(RECID) + keyNum * (sizeof(RECID) + attrLength), &initRid, sizeof(RECID)) == NULL){
+			if (memcpy(*pbuf + sizeof(BtrHdr) + sizeof(RECID) + keyNum * (sizeof(RECID) + attrLength), &initRid, sizeof(RECID)) == NULL){
 				printf("Btr_assignNode failed: second pointer to adjacent leaf node\n");
 				return AME_UNIX;
 			}
@@ -258,9 +259,9 @@ int Btr_getNode(char ** pbuf, int AM_fd, RECID adr){
 	LEAFIDX_PREV = -1
 	LEAFIDX_NEXT = -2
 */
-int Btr_getPtr(char * pbuf, char nodeType, int attrLength, int idx, int keyNum, RECID * rid){
+int Btr_getPtr(char ** pbuf, char nodeType, int attrLength, int idx, int keyNum, RECID * rid){
 
-	BtrHdr * bhdr = (BtrHdr *) pbuf;
+	BtrHdr * bhdr = (BtrHdr *) *pbuf;
 
 	if (idx == NODE_PARENT){
 		if (memcpy(rid, &(bhdr->parent), sizeof(RECID)) == NULL){
@@ -272,7 +273,7 @@ int Btr_getPtr(char * pbuf, char nodeType, int attrLength, int idx, int keyNum, 
 			printf("Btr_getPtr failed: invalid 'idx' value: %d, keyNum: %d\n", idx, keyNum);
 			return AME_INVALIDPARA;
 		}
-		if (memcpy(rid, pbuf + sizeof(BtrHdr) + idx * (sizeof(RECID) + attrLength), sizeof(RECID)) == NULL){
+		if (memcpy(rid, *pbuf + sizeof(BtrHdr) + idx * (sizeof(RECID) + attrLength), sizeof(RECID)) == NULL){
 			printf("Btr_getPtr failed: 'memcpy' for reading the pointer of internal(root) node\n");
 			return AME_UNIX;
 		}
@@ -284,16 +285,16 @@ int Btr_getPtr(char * pbuf, char nodeType, int attrLength, int idx, int keyNum, 
 			return AME_INVALIDPARA;
 		}
 		if (idx == LEAFIDX_PREV){
-			if (memcpy(rid, pbuf + sizeof(BtrHdr), sizeof(RECID)) == NULL){
+			if (memcpy(rid, *pbuf + sizeof(BtrHdr), sizeof(RECID)) == NULL){
 				printf("Btr_getPtr failed: 'memcpy' for reading ptr of prev leaf node\n");
 				return AME_UNIX;
 			}
 		} else if (idx == LEAFIDX_NEXT){
-			if (memcpy(rid, pbuf + sizeof(BtrHdr) + sizeof(RECID) + keyNum * (sizeof(RECID) + attrLength), sizeof(RECID)) == NULL){
+			if (memcpy(rid, *pbuf + sizeof(BtrHdr) + sizeof(RECID) + keyNum * (sizeof(RECID) + attrLength), sizeof(RECID)) == NULL){
 				printf("Btr_getPtr failed: 'memcpy' for reading ptr of next leaf node\n");
 				return AME_UNIX;
 			}
-		} else if (memcpy(rid, pbuf + sizeof(BtrHdr) + sizeof(RECID) + idx * (sizeof(RECID) + attrLength), sizeof(RECID)) == NULL){
+		} else if (memcpy(rid, *pbuf + sizeof(BtrHdr) + sizeof(RECID) + idx * (sizeof(RECID) + attrLength), sizeof(RECID)) == NULL){
 			printf("Btr_getPtr failed: 'memcpy' for reading the pointer of leaf node\n");
 			return AME_UNIX;
 		}
@@ -304,13 +305,13 @@ int Btr_getPtr(char * pbuf, char nodeType, int attrLength, int idx, int keyNum, 
 	return AME_OK;
 }
 
-int Btr_getKey(char * pbuf, char nodeType, int attrLength, int idx, int keyNum, char * value){
+int Btr_getKey(char ** pbuf, char nodeType, int attrLength, int idx, int keyNum, char * value){
 	if ((nodeType == NODE_ROOT) || (nodeType == NODE_INT)){
 		if ((idx >= keyNum) || (idx < 0)){
 			printf("Btr_getKey failed: invalid 'idx' value: %d, keyNum: %d\n", idx, keyNum);
 			return AME_INVALIDPARA;
 		}
-		if (memcpy(value, pbuf + sizeof(BtrHdr) + idx * (sizeof(RECID) + attrLength) + sizeof(RECID), attrLength) == NULL){
+		if (memcpy(value, *pbuf + sizeof(BtrHdr) + idx * (sizeof(RECID) + attrLength) + sizeof(RECID), attrLength) == NULL){
 			printf("Btr_getKey failed: 'memcpy' for reading the key of internal(root) node \n");
 			return AME_UNIX;
 		}
@@ -319,7 +320,7 @@ int Btr_getKey(char * pbuf, char nodeType, int attrLength, int idx, int keyNum, 
 			printf("Btr_getKey failed: invalid 'idx' value: %d, keyNum: %d\n", idx, keyNum);
 			return AME_INVALIDPARA;
 		}
-		if (memcpy(value, pbuf + sizeof(BtrHdr) + sizeof(RECID) + idx * (sizeof(RECID) + attrLength) + sizeof(RECID), attrLength) == NULL){
+		if (memcpy(value, *pbuf + sizeof(BtrHdr) + sizeof(RECID) + idx * (sizeof(RECID) + attrLength) + sizeof(RECID), attrLength) == NULL){
 			printf("Btr_getKey failed: 'memcpy' for reading the key of leaf node\n");
 			return AME_UNIX;
 		}
@@ -330,7 +331,7 @@ int Btr_getKey(char * pbuf, char nodeType, int attrLength, int idx, int keyNum, 
 	return AME_OK;
 }
 
-int Btr_setPtr(char * pbuf, char nodeType, int attrLength, int idx, int keyNum, RECID * rid){
+int Btr_setPtr(char ** pbuf, char nodeType, int attrLength, int idx, int keyNum, RECID * rid){
 	RECID temp;
 	BtrHdr * bhdr = (BtrHdr *) pbuf;
 	printf("Btr_setPtr: going to write pagenum %d, recnum %d at idx %d\n", rid->pagenum, rid->recnum, idx);
@@ -344,11 +345,11 @@ int Btr_setPtr(char * pbuf, char nodeType, int attrLength, int idx, int keyNum, 
 			printf("Btr_setPtr failed: invalid 'idx' value: %d, keyNum: %d\n", idx, keyNum);
 			return AME_INVALIDPARA;
 		}
-		if (memcpy(pbuf + sizeof(BtrHdr) + idx * (sizeof(RECID) + attrLength), rid, sizeof(RECID)) == NULL){
+		if (memcpy(*pbuf + sizeof(BtrHdr) + idx * (sizeof(RECID) + attrLength), rid, sizeof(RECID)) == NULL){
 			printf("Btr_setPtr failed: 'memcpy' for writing the pointer of internal(root) node\n");
 			return AME_UNIX;
 		}
-		if (memcpy(&temp, pbuf + sizeof(BtrHdr) + idx * (sizeof(RECID) + attrLength), sizeof(RECID)) == NULL){
+		if (memcpy(&temp, *pbuf + sizeof(BtrHdr) + idx * (sizeof(RECID) + attrLength), sizeof(RECID)) == NULL){
 			printf("Btr_setPtr failed: 'memcpy' for writing the pointer of internal(root) node\n");
 			return AME_UNIX;
 		}
@@ -363,22 +364,22 @@ int Btr_setPtr(char * pbuf, char nodeType, int attrLength, int idx, int keyNum, 
 		printf("node_leaf 2\n");
 		if (idx == LEAFIDX_PREV){
 			printf("node_leaf 3, LEAFIDX_PREV\n");
-			if (memcpy(pbuf + sizeof(BtrHdr), rid, sizeof(RECID)) == NULL){
+			if (memcpy(*pbuf + sizeof(BtrHdr), rid, sizeof(RECID)) == NULL){
 				printf("Btr_setPtr failed: 'memcpy' for writing ptr of prev leaf node\n");
 				return AME_UNIX;
 			}
 		} else if (idx == LEAFIDX_NEXT){
 			printf("node_leaf 3, LEAFIDX_NEXT. writing length %d from address %d\n", (int)sizeof(RECID), (int)(sizeof(BtrHdr) + sizeof(RECID) + keyNum * (sizeof(RECID) + attrLength)));
-			if (memcpy(&temp, pbuf + sizeof(BtrHdr) + sizeof(RECID) + keyNum * (sizeof(RECID) + attrLength), sizeof(RECID)) == NULL){
+			if (memcpy(&temp, *pbuf + sizeof(BtrHdr) + sizeof(RECID) + keyNum * (sizeof(RECID) + attrLength), sizeof(RECID)) == NULL){
 				printf("Btr_setPtr failed: 'memcpy' for writing ptr of next leaf node\n");
 				return AME_UNIX;
 			}
 			printf("setPtr: temp: pagenum %d, recnum %d\n", temp.pagenum, temp.recnum);
-			if (memcpy(pbuf + sizeof(BtrHdr) + sizeof(RECID) + keyNum * (sizeof(RECID) + attrLength), rid, sizeof(RECID)) == NULL){
+			if (memcpy(*pbuf + sizeof(BtrHdr) + sizeof(RECID) + keyNum * (sizeof(RECID) + attrLength), rid, sizeof(RECID)) == NULL){
 				printf("Btr_setPtr failed: 'memcpy' for writing ptr of next leaf node\n");
 				return AME_UNIX;
 			}
-		} else if (memcpy(pbuf + sizeof(BtrHdr) + sizeof(RECID) + idx * (sizeof(RECID) + attrLength), rid, sizeof(RECID)) == NULL){
+		} else if (memcpy(*pbuf + sizeof(BtrHdr) + sizeof(RECID) + idx * (sizeof(RECID) + attrLength), rid, sizeof(RECID)) == NULL){
 				printf("Btr_setPtr failed: 'memcpy' for writing the pointer of leaf node\n");
 				return AME_UNIX;
 
@@ -390,13 +391,13 @@ int Btr_setPtr(char * pbuf, char nodeType, int attrLength, int idx, int keyNum, 
 	return AME_OK;
 }
 
-int Btr_setKey(char * pbuf, char nodeType, int attrLength, int idx, int keyNum, char * value){
+int Btr_setKey(char ** pbuf, char nodeType, int attrLength, int idx, int keyNum, char * value){
 	if ((nodeType == NODE_ROOT) || (nodeType == NODE_INT)){
 		if ((idx >= keyNum) || (idx < 0)){
 			printf("Btr_setKey failed: invalid 'idx' value: %d, keyNum: %d\n", idx, keyNum);
 			return AME_INVALIDPARA;
 		}
-		if (memcpy(pbuf + sizeof(BtrHdr) + idx * (sizeof(RECID) + attrLength) + sizeof(RECID), value, attrLength) == NULL){
+		if (memcpy(*pbuf + sizeof(BtrHdr) + idx * (sizeof(RECID) + attrLength) + sizeof(RECID), value, attrLength) == NULL){
 			printf("Btr_setKey failed: 'memcpy' for reading the key of internal(root) node \n");
 			return AME_UNIX;
 		}
@@ -405,7 +406,7 @@ int Btr_setKey(char * pbuf, char nodeType, int attrLength, int idx, int keyNum, 
 			printf("Btr_setKey failed: invalid 'idx' value: %d, keyNum: %d\n", idx, keyNum);
 			return AME_INVALIDPARA;
 		}
-		if (memcpy(pbuf + sizeof(BtrHdr) + sizeof(RECID) + idx * (sizeof(RECID) + attrLength) + sizeof(RECID), value, attrLength) == NULL){
+		if (memcpy(*pbuf + sizeof(BtrHdr) + sizeof(RECID) + idx * (sizeof(RECID) + attrLength) + sizeof(RECID), value, attrLength) == NULL){
 			printf("Btr_setKey failed: 'memcpy' for reading the key of leaf node\n");
 			return AME_UNIX;
 		}
@@ -470,7 +471,7 @@ int AM_CreateIndex(char *fileName, int indexNo, char attrType, int attrLength, b
 	amhdr.isUnique = FALSE;
 
 	/* root node */
-	if ((err = Btr_assignNode(pfd, NODE_ROOT, attrLength, keyNum, pagenum, pbuf[0], parent)) != AME_OK){
+	if ((err = Btr_assignNode(pfd, NODE_ROOT, attrLength, keyNum, pagenum, &pbuf[0], parent)) != AME_OK){
 		printf("AM_CreateIndex failed: Btr_assignNode to NODE_ROOT\n");
 		return err;
 	}
@@ -480,35 +481,36 @@ int AM_CreateIndex(char *fileName, int indexNo, char attrType, int attrLength, b
 	parent.pagenum = amhdr.root.pagenum;
 
 	/* first child(leaf) node */
-	if ((err = Btr_assignNode(pfd, NODE_LEAF, attrLength, keyNum, pagenum+1, pbuf[1], parent)) != AME_OK){
+	if ((err = Btr_assignNode(pfd, NODE_LEAF, attrLength, keyNum, pagenum+1, &pbuf[1], parent)) != AME_OK){
 		printf("AM_CreateIndex failed: Btr_assignNode to first NODE_LEAF\n");
 		return err;
 	}
 	rid.pagenum = pagenum[1];
 	rid.recnum = NODE_INTNULL;
-	if ((err = Btr_setPtr(pbuf[0], NODE_ROOT, attrLength, 0, keyNum, &rid)) != AME_OK){
+	if ((err = Btr_setPtr(&pbuf[0], NODE_ROOT, attrLength, 0, keyNum, &rid)) != AME_OK){
 		printf("AM_CreateIndex failed: Btr_setPtr at NODE_ROOT to first NODE_LEAF\n");
 		return err;
 	}
-	if ((err = Btr_getPtr(pbuf[0], NODE_ROOT, attrLength, 0, keyNum, &temp)) != AME_OK){
+	if ((err = Btr_getPtr(&pbuf[0], NODE_ROOT, attrLength, 0, keyNum, &temp)) != AME_OK){
 		printf("AM_CreateIndex failed: Btr_setPtr at NODE_ROOT to second NODE_LEAF\n");
 		return err;
 	}
 	Btr_printNode(pbuf[0]);
 	/* second child(leaf) node */
-	if ((err = Btr_assignNode(pfd, NODE_LEAF, attrLength, keyNum, pagenum+2, pbuf[2], parent)) != AME_OK){
+	if ((err = Btr_assignNode(pfd, NODE_LEAF, attrLength, keyNum, pagenum+2, &pbuf[2], parent)) != AME_OK){
 		printf("AM_CreateIndex failed: Btr_assignNode to second NODE_LEAF\n");
 		return err;
 	}
 	rid.pagenum = pagenum[2];
-	if ((err = Btr_setPtr(pbuf[0], NODE_ROOT, attrLength, 1, keyNum, &rid)) != AME_OK){
+	if ((err = Btr_setPtr(&pbuf[0], NODE_ROOT, attrLength, 1, keyNum, &rid)) != AME_OK){
 		printf("AM_CreateIndex failed: Btr_setPtr at NODE_ROOT to second NODE_LEAF\n");
 		return err;
 	}
-	if ((err = Btr_getPtr(pbuf[0], NODE_ROOT, attrLength, 1, keyNum, &temp)) != AME_OK){
+	if ((err = Btr_getPtr(&pbuf[0], NODE_ROOT, attrLength, 1, keyNum, &temp)) != AME_OK){
 		printf("AM_CreateIndex failed: Btr_setPtr at NODE_ROOT to second NODE_LEAF\n");
 		return err;
 	}
+	Btr_printNode(pbuf[0]);
 	Btr_printNode(pbuf[1]);
 	Btr_printNode(pbuf[2]);
 	printf("checking error: at link?\n");
@@ -519,24 +521,24 @@ int AM_CreateIndex(char *fileName, int indexNo, char attrType, int attrLength, b
 	}
 
 	/* links between leaf nodes */
-	if ((err = Btr_getPtr(pbuf[1], NODE_LEAF, attrLength, LEAFIDX_PREV, keyNum, &temp)) != AME_OK){
+	if ((err = Btr_getPtr(&pbuf[1], NODE_LEAF, attrLength, LEAFIDX_PREV, keyNum, &temp)) != AME_OK){
 		printf("AM_CreateIndex failed: linking first leaf node to the second one\n");
 		return err;
 	}
 	printf("LEAFIDX_PREV of pnum[1]: pagenum %d, recnum %d\n", temp.pagenum, temp.recnum);
 
-	if ((err = Btr_getPtr(pbuf[1], NODE_LEAF, attrLength, LEAFIDX_NEXT, keyNum, &temp)) != AME_OK){
+	if ((err = Btr_getPtr(&pbuf[1], NODE_LEAF, attrLength, LEAFIDX_NEXT, keyNum, &temp)) != AME_OK){
 		printf("AM_CreateIndex failed: linking first leaf node to the second one\n");
 		return err;
 	}
 	printf("LEAFIDX_NEXT of pnum[1]: pagenum %d, recnum %d\n", temp.pagenum, temp.recnum);
 		rid.recnum = NODE_NULLPTR;
-	if ((err = Btr_setPtr(pbuf[1], NODE_LEAF, attrLength, LEAFIDX_NEXT, keyNum, &rid)) != AME_OK){
+	if ((err = Btr_setPtr(&pbuf[1], NODE_LEAF, attrLength, LEAFIDX_NEXT, keyNum, &rid)) != AME_OK){
 		printf("AM_CreateIndex failed: linking first leaf node to the second one\n");
 		return err;
 	}
 	rid.pagenum = pagenum[1];
-	if ((err = Btr_setPtr(pbuf[2], NODE_LEAF, attrLength, LEAFIDX_PREV, keyNum, &rid)) != AME_OK){
+	if ((err = Btr_setPtr(&pbuf[2], NODE_LEAF, attrLength, LEAFIDX_PREV, keyNum, &rid)) != AME_OK){
 		printf("AM_CreateIndex failed: linking second leaf node to the first one\n");
 		return err;
 	}
@@ -603,9 +605,9 @@ int AM_OpenIndex(char *fileName, int indexNo){
 			strcpy(aite->fname, iname);
 			aite->pfd = pfd;
 			Btr_getNode(&pbuf, aid, aite->hdr.root);
-			Btr_getPtr(pbuf, NODE_ROOT, aite->hdr.attrLength, 0, aite->hdr.maxKeys, &temp);
+			Btr_getPtr(&pbuf, NODE_ROOT, aite->hdr.attrLength, 0, aite->hdr.maxKeys, &temp);
 			printf("%d th ptr: pagenum %d, recnum %d\n", 0, temp.pagenum, temp.recnum);
-			Btr_getPtr(pbuf, NODE_ROOT, aite->hdr.attrLength, 1, aite->hdr.maxKeys, &temp);
+			Btr_getPtr(&pbuf, NODE_ROOT, aite->hdr.attrLength, 1, aite->hdr.maxKeys, &temp);
 			printf("%d th ptr: pagenum %d, recnum %d\n", 1, temp.pagenum, temp.recnum);
 			
 			if((err = PF_UnpinPage(pfd, aite->hdr.root.pagenum, FALSE)) != PFE_OK){
@@ -697,6 +699,7 @@ int Btr_valComp(char * a, char * b, char attrType, int attrLength){
 		if (result == 0) return BTR_EQ;
 		if (result > 0) return BTR_GT;
 	}
+   return AME_UNIX;
 }
 
 /* split at current node */
@@ -767,7 +770,7 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 
 			/* find the position of the duplicate key */
 			for (i = 0; i < entries; i++){
-				if ((err = Btr_getKey(pbuf, NODE_LEAF, amhdr->attrLength, i, amhdr->maxKeys, tempValue)) != AME_OK){
+				if ((err = Btr_getKey(&pbuf, NODE_LEAF, amhdr->attrLength, i, amhdr->maxKeys, tempValue)) != AME_OK){
 					printf("Btr_recSplit failed: reading %d th value for finding duplicate value\n", i);
 					return err;
 				}
@@ -789,13 +792,13 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 			}
 
 			/* parent of the current node */
-			if ((err = Btr_getPtr(pbuf, NODE_LEAF, amhdr->attrLength, NODE_PARENT, amhdr->maxKeys, &parent)) != AME_OK){
+			if ((err = Btr_getPtr(&pbuf, NODE_LEAF, amhdr->attrLength, NODE_PARENT, amhdr->maxKeys, &parent)) != AME_OK){
 				printf("Btr_recSplit failed: retrieving the parent ptr of an leaf node\n");
 				return err;
 			}
 
 			/* assign a new node */
-			if ((err = Btr_assignNode(ait[AM_fd].pfd, NODE_LEAF, amhdr->attrLength, amhdr->maxKeys, &newNode, pbuf_new, parent)) != AME_OK){
+			if ((err = Btr_assignNode(ait[AM_fd].pfd, NODE_LEAF, amhdr->attrLength, amhdr->maxKeys, &newNode, &pbuf_new, parent)) != AME_OK){
 				printf("Btr_recSplit failed: assigning a new leaf node\n");
 				return err;
 			}
@@ -807,17 +810,17 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 			/* right neighbor of the current leaf node */
 
 			adr.recnum = NODE_NULLPTR;
-			if ((err = Btr_setPtr(pbuf_new, NODE_LEAF, amhdr->attrLength, LEAFIDX_PREV, amhdr->maxKeys, &adr)) != AME_OK){
+			if ((err = Btr_setPtr(&pbuf_new, NODE_LEAF, amhdr->attrLength, LEAFIDX_PREV, amhdr->maxKeys, &adr)) != AME_OK){
 				printf("Btr_recSplit failed: setting PREV ptr of new node\n");
 				return err;
 			}
 
-			if ((err = Btr_getPtr(pbuf, NODE_LEAF, amhdr->attrLength, LEAFIDX_NEXT, amhdr->maxKeys, &tempRid_nbr)) != AME_OK){
+			if ((err = Btr_getPtr(&pbuf, NODE_LEAF, amhdr->attrLength, LEAFIDX_NEXT, amhdr->maxKeys, &tempRid_nbr)) != AME_OK){
 				printf("Btr_recSplit failed: retrieving NEXT ptr of a leaf node\n");
 				return err;
 			}
 
-			if ((err = Btr_setPtr(pbuf_new, NODE_LEAF, amhdr->attrLength, LEAFIDX_NEXT, amhdr->maxKeys, &tempRid_nbr)) != AME_OK){
+			if ((err = Btr_setPtr(&pbuf_new, NODE_LEAF, amhdr->attrLength, LEAFIDX_NEXT, amhdr->maxKeys, &tempRid_nbr)) != AME_OK){
 				printf("Btr_recSplit failed: setting NEXT ptr of new node\n");
 				return err;
 			}
@@ -825,7 +828,7 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 			tempRid_new.pagenum = newNode;
 			tempRid_new.recnum = NODE_NULLPTR;
 
-			if ((err = Btr_setPtr(pbuf, NODE_LEAF, amhdr->attrLength, LEAFIDX_NEXT, amhdr->maxKeys, &tempRid_new)) != AME_OK){
+			if ((err = Btr_setPtr(&pbuf, NODE_LEAF, amhdr->attrLength, LEAFIDX_NEXT, amhdr->maxKeys, &tempRid_new)) != AME_OK){
 				printf("Btr_recSplit failed: setting NEXT ptr of new leaf node\n");
 				return err;
 			}
@@ -836,7 +839,7 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 					return err;
 				}
 
-				if ((err = Btr_setPtr(pbuf_nbr, NODE_LEAF, amhdr->attrLength, LEAFIDX_PREV, amhdr->maxKeys, &tempRid_new)) != AME_OK){
+				if ((err = Btr_setPtr(&pbuf_nbr, NODE_LEAF, amhdr->attrLength, LEAFIDX_PREV, amhdr->maxKeys, &tempRid_new)) != AME_OK){
 					printf("Btr_recSplit failed: setting PREV ptr of neighboring leaf node\n");
 					return err;
 				}
@@ -846,28 +849,28 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 			if (i == 0) {
 				/* move values - all but the first value */
 				for (j = 1; j < entries; j++){
-					if ((err = Btr_getPtr(pbuf, NODE_LEAF, amhdr->attrLength, j, amhdr->maxKeys, &tempRid)) != AME_OK){
+					if ((err = Btr_getPtr(&pbuf, NODE_LEAF, amhdr->attrLength, j, amhdr->maxKeys, &tempRid)) != AME_OK){
 						printf("Btr_recSplit failed: retrieving %d th ptr of current leaf node\n", j);
 						return err;
 					}
-					if ((err = Btr_getKey(pbuf, NODE_LEAF, amhdr->attrLength, j, amhdr->maxKeys, tempValue)) != AME_OK){
+					if ((err = Btr_getKey(&pbuf, NODE_LEAF, amhdr->attrLength, j, amhdr->maxKeys, tempValue)) != AME_OK){
 						printf("Btr_recSplit failed: retrieving %d th value of current leaf node\n", j);
 						return err;
 					}
-					if ((err = Btr_setPtr(pbuf_new, NODE_LEAF, amhdr->attrLength, j-1, amhdr->maxKeys, &tempRid)) != AME_OK){
+					if ((err = Btr_setPtr(&pbuf_new, NODE_LEAF, amhdr->attrLength, j-1, amhdr->maxKeys, &tempRid)) != AME_OK){
 						printf("Btr_recSplit failed: writing %d th ptr of current leaf node to new one\n", j);
 						return err;
 					}
-					if ((err = Btr_setKey(pbuf_new, NODE_LEAF, amhdr->attrLength, j-1, amhdr->maxKeys, tempValue)) != AME_OK){
+					if ((err = Btr_setKey(&pbuf_new, NODE_LEAF, amhdr->attrLength, j-1, amhdr->maxKeys, tempValue)) != AME_OK){
 						printf("Btr_recSplit failed: writing %d th value of current leaf node to new one\n", j);
 						return err;
 					}
 
-					if ((err = Btr_setPtr(pbuf, NODE_LEAF, amhdr->attrLength, j, amhdr->maxKeys, &rid_empty)) != AME_OK){
+					if ((err = Btr_setPtr(&pbuf, NODE_LEAF, amhdr->attrLength, j, amhdr->maxKeys, &rid_empty)) != AME_OK){
 						printf("Btr_recSplit failed: emptying %d th ptr of current leaf node\n", j);
 						return err;
 					}
-					if ((err = Btr_setKey(pbuf, NODE_LEAF, amhdr->attrLength, j, amhdr->maxKeys, value_empty)) != AME_OK){
+					if ((err = Btr_setKey(&pbuf, NODE_LEAF, amhdr->attrLength, j, amhdr->maxKeys, value_empty)) != AME_OK){
 						printf("Btr_recSplit failed: emptying %d th value of current leaf node\n", j);
 						return err;
 					}
@@ -876,11 +879,11 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 				}
 
 				/* add duplicate value to the current node, set duplicate attribute to TRUE */
-				if ((err = Btr_setPtr(pbuf, NODE_LEAF, amhdr->attrLength, 1, amhdr->maxKeys, &recId)) != AME_OK){
+				if ((err = Btr_setPtr(&pbuf, NODE_LEAF, amhdr->attrLength, 1, amhdr->maxKeys, &recId)) != AME_OK){
 					printf("Btr_recSplit failed: writing %d th ptr of duplicate value at a leaf node\n", 1);
 					return err;
 				}
-				if ((err = Btr_setKey(pbuf, NODE_LEAF, amhdr->attrLength, 1, amhdr->maxKeys, value)) != AME_OK){
+				if ((err = Btr_setKey(&pbuf, NODE_LEAF, amhdr->attrLength, 1, amhdr->maxKeys, value)) != AME_OK){
 					printf("Btr_recSplit failed: writing %d th value of duplicate value at a leaf node\n", 1);
 					return err;
 				}
@@ -891,7 +894,7 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 
 				/* copy up the second value, with new node's ptr */
 				tempRid_new.recnum = NODE_INTNULL;
-				if ((err = Btr_getKey(pbuf_new, NODE_LEAF, amhdr->attrLength, 0, amhdr->maxKeys, tempValue)) != AME_OK){
+				if ((err = Btr_getKey(&pbuf_new, NODE_LEAF, amhdr->attrLength, 0, amhdr->maxKeys, tempValue)) != AME_OK){
 					printf("Btr_recSplit failed: retrieving first value of new leaf node\n");
 					return err;
 				}
@@ -908,13 +911,13 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 				bhdr_new2 = (BtrHdr *)pbuf_par;
 				entries2 = bhdr_new2->entries;
 
-				if ((err = Btr_getKey(pbuf, NODE_LEAF, amhdr->attrLength, 0, amhdr->maxKeys, tempValue)) != AME_OK){
+				if ((err = Btr_getKey(&pbuf, NODE_LEAF, amhdr->attrLength, 0, amhdr->maxKeys, tempValue)) != AME_OK){
 					printf("Btr_recSplit failed: retrieving first value of current node\n");
 					return err;
 				}
 
 				for (j = 0; j < entries2; j++){
-					if ((err = Btr_getPtr(pbuf_par, NODE_INT, amhdr->attrLength, j, amhdr->maxKeys, &tempRid)) != AME_OK){
+					if ((err = Btr_getPtr(&pbuf_par, NODE_INT, amhdr->attrLength, j, amhdr->maxKeys, &tempRid)) != AME_OK){
 						printf("Btr_recSplit failed: reading %d th ptr for finding key value to replace\n", j);
 						return err;
 					}
@@ -924,7 +927,7 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 							/* when there is no key left to the found ptr */
 							/* assign a new leaf node to the original ptr's place */
 							/* assign a new node */
-							if ((err = Btr_assignNode(ait[AM_fd].pfd, NODE_LEAF, amhdr->attrLength, amhdr->maxKeys, &newNode2, pbuf_new2, parent)) != AME_OK){
+							if ((err = Btr_assignNode(ait[AM_fd].pfd, NODE_LEAF, amhdr->attrLength, amhdr->maxKeys, &newNode2, &pbuf_new2, parent)) != AME_OK){
 								printf("Btr_recSplit failed: assigning a new leaf node\n");
 								return err;
 							}
@@ -934,29 +937,29 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 							/* adjust the pointers */
 							tempRid.pagenum = newNode2;
 							tempRid.recnum = NODE_INTNULL;
-							if ((err = Btr_setPtr(pbuf_par, NODE_INT, amhdr->attrLength, j, amhdr->maxKeys, &tempRid)) != AME_OK){
+							if ((err = Btr_setPtr(&pbuf_par, NODE_INT, amhdr->attrLength, j, amhdr->maxKeys, &tempRid)) != AME_OK){
 								printf("Btr_recSplit failed: assigning ptr at a parent node to newly assigned node\n");
 								return err;
 							}
 
 							adr.recnum = NODE_NULLPTR;
-							if ((err = Btr_setPtr(pbuf_new2, NODE_LEAF, amhdr->attrLength, LEAFIDX_NEXT, amhdr->maxKeys, &adr)) != AME_OK){
+							if ((err = Btr_setPtr(&pbuf_new2, NODE_LEAF, amhdr->attrLength, LEAFIDX_NEXT, amhdr->maxKeys, &adr)) != AME_OK){
 								printf("Btr_recSplit failed: assigning NEXT ptr of newly assigned leaf node \n");
 								return err;
 							}
 
-							if ((err = Btr_getPtr(pbuf, NODE_LEAF, amhdr->attrLength, LEAFIDX_PREV, amhdr->maxKeys, &tempRid_nbr)) != AME_OK){
+							if ((err = Btr_getPtr(&pbuf, NODE_LEAF, amhdr->attrLength, LEAFIDX_PREV, amhdr->maxKeys, &tempRid_nbr)) != AME_OK){
 								printf("Btr_recSplit failed: retrieving PREV ptr of a leaf node\n");
 								return err;
 							}
 
-							if ((err = Btr_setPtr(pbuf_new2, NODE_LEAF, amhdr->attrLength, LEAFIDX_PREV, amhdr->maxKeys, &tempRid_nbr)) != AME_OK){
+							if ((err = Btr_setPtr(&pbuf_new2, NODE_LEAF, amhdr->attrLength, LEAFIDX_PREV, amhdr->maxKeys, &tempRid_nbr)) != AME_OK){
 								printf("Btr_recSplit failed: setting PREV ptr of new left leaf node\n");
 								return err;
 							}
 
 							tempRid.recnum = NODE_NULLPTR;
-							if ((err = Btr_setPtr(pbuf, NODE_LEAF, amhdr->attrLength, LEAFIDX_PREV, amhdr->maxKeys, &tempRid)) != AME_OK){
+							if ((err = Btr_setPtr(&pbuf, NODE_LEAF, amhdr->attrLength, LEAFIDX_PREV, amhdr->maxKeys, &tempRid)) != AME_OK){
 								printf("Btr_recSplit failed: assigning PREV ptr of current leaf node \n");
 								return err;
 							}
@@ -967,7 +970,7 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 									return err;
 								}
 
-								if ((err = Btr_setPtr(pbuf_nbr, NODE_LEAF, amhdr->attrLength, LEAFIDX_NEXT, amhdr->maxKeys, &tempRid)) != AME_OK){
+								if ((err = Btr_setPtr(&pbuf_nbr, NODE_LEAF, amhdr->attrLength, LEAFIDX_NEXT, amhdr->maxKeys, &tempRid)) != AME_OK){
 									printf("Btr_recSplit failed: setting NEXT ptr of neighboring leaf node\n");
 									return err;
 								}
@@ -981,7 +984,7 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 							}
 						} else {
 							/* leave the other entries, just replace the key */
-							if ((err = Btr_setKey(pbuf_par, NODE_INT, amhdr->attrLength, j-1, amhdr->maxKeys, value)) != AME_OK){
+							if ((err = Btr_setKey(&pbuf_par, NODE_INT, amhdr->attrLength, j-1, amhdr->maxKeys, value)) != AME_OK){
 								printf("Btr_recSplit failed: replacing the parent node's key for duplicate node\n");
 								return err;
 							}
@@ -999,28 +1002,28 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 			} /* duplicate value at the rightmost position */
 			else if (i == entries - 1){
 				/* move values - just the last value */
-				if ((err = Btr_getPtr(pbuf, NODE_LEAF, amhdr->attrLength, i, amhdr->maxKeys, &tempRid)) != AME_OK){
+				if ((err = Btr_getPtr(&pbuf, NODE_LEAF, amhdr->attrLength, i, amhdr->maxKeys, &tempRid)) != AME_OK){
 					printf("Btr_recSplit failed: retrieving %d th ptr of current leaf node\n", i);
 					return err;
 				}
-				if ((err = Btr_getKey(pbuf, NODE_LEAF, amhdr->attrLength, i, amhdr->maxKeys, tempValue)) != AME_OK){
+				if ((err = Btr_getKey(&pbuf, NODE_LEAF, amhdr->attrLength, i, amhdr->maxKeys, tempValue)) != AME_OK){
 					printf("Btr_recSplit failed: retrieving %d th value of current leaf node\n", i);
 					return err;
 				}
-				if ((err = Btr_setPtr(pbuf_new, NODE_LEAF, amhdr->attrLength, 0, amhdr->maxKeys, &tempRid)) != AME_OK){
+				if ((err = Btr_setPtr(&pbuf_new, NODE_LEAF, amhdr->attrLength, 0, amhdr->maxKeys, &tempRid)) != AME_OK){
 					printf("Btr_recSplit failed: writing %d th ptr of current leaf node to new one\n", 0);
 					return err;
 				}
-				if ((err = Btr_setKey(pbuf_new, NODE_LEAF, amhdr->attrLength, 0, amhdr->maxKeys, tempValue)) != AME_OK){
+				if ((err = Btr_setKey(&pbuf_new, NODE_LEAF, amhdr->attrLength, 0, amhdr->maxKeys, tempValue)) != AME_OK){
 					printf("Btr_recSplit failed: writing %d th value of current leaf node to new one\n", 0);
 					return err;
 				}
 
-				if ((err = Btr_setPtr(pbuf, NODE_LEAF, amhdr->attrLength, i, amhdr->maxKeys, &rid_empty)) != AME_OK){
+				if ((err = Btr_setPtr(&pbuf, NODE_LEAF, amhdr->attrLength, i, amhdr->maxKeys, &rid_empty)) != AME_OK){
 					printf("Btr_recSplit failed: emptying %d th ptr of current leaf node\n", i);
 					return err;
 				}
-				if ((err = Btr_setKey(pbuf, NODE_LEAF, amhdr->attrLength, i, amhdr->maxKeys, value_empty)) != AME_OK){
+				if ((err = Btr_setKey(&pbuf, NODE_LEAF, amhdr->attrLength, i, amhdr->maxKeys, value_empty)) != AME_OK){
 					printf("Btr_recSplit failed: emptying %d th value of current leaf node\n", i);
 					return err;
 				}
@@ -1028,11 +1031,11 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 				bhdr_new->entries++;
 
 				/* add duplicate value to the new node , set duplicate attribute to TRUE*/
-				if ((err = Btr_setPtr(pbuf_new, NODE_LEAF, amhdr->attrLength, 1, amhdr->maxKeys, &recId)) != AME_OK){
+				if ((err = Btr_setPtr(&pbuf_new, NODE_LEAF, amhdr->attrLength, 1, amhdr->maxKeys, &recId)) != AME_OK){
 					printf("Btr_recSplit failed: writing %d th ptr of duplicate value at a new leaf node\n", 1);
 					return err;
 				}
-				if ((err = Btr_setKey(pbuf_new, NODE_LEAF, amhdr->attrLength, 1, amhdr->maxKeys, value)) != AME_OK){
+				if ((err = Btr_setKey(&pbuf_new, NODE_LEAF, amhdr->attrLength, 1, amhdr->maxKeys, value)) != AME_OK){
 					printf("Btr_recSplit failed: writing %d th value of duplicate value at a new leaf node\n", 1);
 					return err;
 				}
@@ -1044,7 +1047,7 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 
 				/* copy up the new value, with new node's ptr */
 				tempRid_new.recnum = NODE_INTNULL;
-				if ((err = Btr_getKey(pbuf_new, NODE_LEAF, amhdr->attrLength, 0, amhdr->maxKeys, tempValue)) != AME_OK){
+				if ((err = Btr_getKey(&pbuf_new, NODE_LEAF, amhdr->attrLength, 0, amhdr->maxKeys, tempValue)) != AME_OK){
 					printf("Btr_recSplit failed: retrieving first value of new leaf node\n");
 					return err;
 				}
@@ -1059,7 +1062,7 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 			} /* otherwise: split twice */
 			else {
 				/* assign another node */
-				if ((err = Btr_assignNode(ait[AM_fd].pfd, NODE_LEAF, amhdr->attrLength, amhdr->maxKeys, &newNode2, pbuf_new2, parent)) != AME_OK){
+				if ((err = Btr_assignNode(ait[AM_fd].pfd, NODE_LEAF, amhdr->attrLength, amhdr->maxKeys, &newNode2, &pbuf_new2, parent)) != AME_OK){
 					printf("Btr_recSplit failed: assigning a new leaf node\n");
 					return err;
 				}
@@ -1067,17 +1070,17 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 				amhdr->numNodes++;
 				ait[AM_fd].hdrchanged = TRUE;
 
-				if ((err = Btr_setPtr(pbuf_new2, NODE_LEAF, amhdr->attrLength, LEAFIDX_PREV, amhdr->maxKeys, &tempRid_new)) != AME_OK){
+				if ((err = Btr_setPtr(&pbuf_new2, NODE_LEAF, amhdr->attrLength, LEAFIDX_PREV, amhdr->maxKeys, &tempRid_new)) != AME_OK){
 					printf("Btr_recSplit failed: setting PREV ptr of new node\n");
 					return err;
 				}
 
-				if ((err = Btr_getPtr(pbuf_new, NODE_LEAF, amhdr->attrLength, LEAFIDX_NEXT, amhdr->maxKeys, &tempRid_nbr)) != AME_OK){
+				if ((err = Btr_getPtr(&pbuf_new, NODE_LEAF, amhdr->attrLength, LEAFIDX_NEXT, amhdr->maxKeys, &tempRid_nbr)) != AME_OK){
 					printf("Btr_recSplit failed: retrieving NEXT ptr of a leaf node\n");
 					return err;
 				}
 
-				if ((err = Btr_setPtr(pbuf_new2, NODE_LEAF, amhdr->attrLength, LEAFIDX_NEXT, amhdr->maxKeys, &tempRid_nbr)) != AME_OK){
+				if ((err = Btr_setPtr(&pbuf_new2, NODE_LEAF, amhdr->attrLength, LEAFIDX_NEXT, amhdr->maxKeys, &tempRid_nbr)) != AME_OK){
 					printf("Btr_recSplit failed: setting NEXT ptr of new node\n");
 					return err;
 				}
@@ -1085,7 +1088,7 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 				tempRid_new2.pagenum = newNode2;
 				tempRid_new2.recnum = NODE_NULLPTR;
 
-				if ((err = Btr_setPtr(pbuf_new, NODE_LEAF, amhdr->attrLength, LEAFIDX_NEXT, amhdr->maxKeys, &tempRid_new2)) != AME_OK){
+				if ((err = Btr_setPtr(&pbuf_new, NODE_LEAF, amhdr->attrLength, LEAFIDX_NEXT, amhdr->maxKeys, &tempRid_new2)) != AME_OK){
 					printf("Btr_recSplit failed: setting NEXT ptr of new leaf node\n");
 					return err;
 				}
@@ -1096,35 +1099,35 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 						return err;
 					}
 
-					if ((err = Btr_setPtr(pbuf_nbr, NODE_LEAF, amhdr->attrLength, LEAFIDX_PREV, amhdr->maxKeys, &tempRid_new2)) != AME_OK){
+					if ((err = Btr_setPtr(&pbuf_nbr, NODE_LEAF, amhdr->attrLength, LEAFIDX_PREV, amhdr->maxKeys, &tempRid_new2)) != AME_OK){
 						printf("Btr_recSplit failed: setting PREV ptr of neighboring leaf node\n");
 						return err;
 					}
 				}
 				/* move values - values larger than duplicate one */
 				for (j = i+1; j < entries; j++){
-					if ((err = Btr_getPtr(pbuf, NODE_LEAF, amhdr->attrLength, j, amhdr->maxKeys, &tempRid)) != AME_OK){
+					if ((err = Btr_getPtr(&pbuf, NODE_LEAF, amhdr->attrLength, j, amhdr->maxKeys, &tempRid)) != AME_OK){
 						printf("Btr_recSplit failed: retrieving %d th ptr of current leaf node\n", j);
 						return err;
 					}
-					if ((err = Btr_getKey(pbuf, NODE_LEAF, amhdr->attrLength, j, amhdr->maxKeys, tempValue)) != AME_OK){
+					if ((err = Btr_getKey(&pbuf, NODE_LEAF, amhdr->attrLength, j, amhdr->maxKeys, tempValue)) != AME_OK){
 						printf("Btr_recSplit failed: retrieving %d th value of current leaf node\n", j);
 						return err;
 					}
-					if ((err = Btr_setPtr(pbuf_new2, NODE_LEAF, amhdr->attrLength, j-(i+1), amhdr->maxKeys, &tempRid)) != AME_OK){
+					if ((err = Btr_setPtr(&pbuf_new2, NODE_LEAF, amhdr->attrLength, j-(i+1), amhdr->maxKeys, &tempRid)) != AME_OK){
 						printf("Btr_recSplit failed: writing %d th ptr of current leaf node to new one\n", j);
 						return err;
 					}
-					if ((err = Btr_setKey(pbuf_new2, NODE_LEAF, amhdr->attrLength, j-(i+1), amhdr->maxKeys, tempValue)) != AME_OK){
+					if ((err = Btr_setKey(&pbuf_new2, NODE_LEAF, amhdr->attrLength, j-(i+1), amhdr->maxKeys, tempValue)) != AME_OK){
 						printf("Btr_recSplit failed: writing %d th value of current leaf node to new one\n", j);
 						return err;
 					}
 
-					if ((err = Btr_setPtr(pbuf, NODE_LEAF, amhdr->attrLength, j, amhdr->maxKeys, &rid_empty)) != AME_OK){
+					if ((err = Btr_setPtr(&pbuf, NODE_LEAF, amhdr->attrLength, j, amhdr->maxKeys, &rid_empty)) != AME_OK){
 						printf("Btr_recSplit failed: emptying %d th ptr of current leaf node\n", j);
 						return err;
 					}
-					if ((err = Btr_setKey(pbuf, NODE_LEAF, amhdr->attrLength, j, amhdr->maxKeys, value_empty)) != AME_OK){
+					if ((err = Btr_setKey(&pbuf, NODE_LEAF, amhdr->attrLength, j, amhdr->maxKeys, value_empty)) != AME_OK){
 						printf("Btr_recSplit failed: emptying %d th value of current leaf node\n", j);
 						return err;
 					}
@@ -1132,28 +1135,28 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 					bhdr_new2->entries++;
 				}
 				/* move values - duplicate value into newly assigned node */
-				if ((err = Btr_getPtr(pbuf, NODE_LEAF, amhdr->attrLength, i, amhdr->maxKeys, &tempRid)) != AME_OK){
+				if ((err = Btr_getPtr(&pbuf, NODE_LEAF, amhdr->attrLength, i, amhdr->maxKeys, &tempRid)) != AME_OK){
 					printf("Btr_recSplit failed: retrieving %d th ptr of current leaf node\n", i);
 					return err;
 				}
-				if ((err = Btr_getKey(pbuf, NODE_LEAF, amhdr->attrLength, i, amhdr->maxKeys, tempValue)) != AME_OK){
+				if ((err = Btr_getKey(&pbuf, NODE_LEAF, amhdr->attrLength, i, amhdr->maxKeys, tempValue)) != AME_OK){
 					printf("Btr_recSplit failed: retrieving %d th value of current leaf node\n", i);
 					return err;
 				}
-				if ((err = Btr_setPtr(pbuf_new, NODE_LEAF, amhdr->attrLength, 0, amhdr->maxKeys, &tempRid)) != AME_OK){
+				if ((err = Btr_setPtr(&pbuf_new, NODE_LEAF, amhdr->attrLength, 0, amhdr->maxKeys, &tempRid)) != AME_OK){
 					printf("Btr_recSplit failed: writing %d th ptr of current leaf node to new one\n", 0);
 					return err;
 				}
-				if ((err = Btr_setKey(pbuf_new, NODE_LEAF, amhdr->attrLength, 0, amhdr->maxKeys, tempValue)) != AME_OK){
+				if ((err = Btr_setKey(&pbuf_new, NODE_LEAF, amhdr->attrLength, 0, amhdr->maxKeys, tempValue)) != AME_OK){
 					printf("Btr_recSplit failed: writing %d th value of current leaf node to new one\n", 0);
 					return err;
 				}
 
-				if ((err = Btr_setPtr(pbuf, NODE_LEAF, amhdr->attrLength, i, amhdr->maxKeys, &rid_empty)) != AME_OK){
+				if ((err = Btr_setPtr(&pbuf, NODE_LEAF, amhdr->attrLength, i, amhdr->maxKeys, &rid_empty)) != AME_OK){
 					printf("Btr_recSplit failed: emptying %d th ptr of current leaf node\n", i);
 					return err;
 				}
-				if ((err = Btr_setKey(pbuf, NODE_LEAF, amhdr->attrLength, i, amhdr->maxKeys, value_empty)) != AME_OK){
+				if ((err = Btr_setKey(&pbuf, NODE_LEAF, amhdr->attrLength, i, amhdr->maxKeys, value_empty)) != AME_OK){
 					printf("Btr_recSplit failed: emptying %d th value of current leaf node\n", i);
 					return err;
 				}
@@ -1161,11 +1164,11 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 				bhdr_new->entries++;
 
 				/* add duplicate value to the middle node , set duplicate attribute to TRUE*/
-				if ((err = Btr_setPtr(pbuf_new, NODE_LEAF, amhdr->attrLength, 1, amhdr->maxKeys, &recId)) != AME_OK){
+				if ((err = Btr_setPtr(&pbuf_new, NODE_LEAF, amhdr->attrLength, 1, amhdr->maxKeys, &recId)) != AME_OK){
 					printf("Btr_recSplit failed: writing %d th ptr of current leaf node to new one\n", 1);
 					return err;
 				}
-				if ((err = Btr_setKey(pbuf_new, NODE_LEAF, amhdr->attrLength, 1, amhdr->maxKeys, value)) != AME_OK){
+				if ((err = Btr_setKey(&pbuf_new, NODE_LEAF, amhdr->attrLength, 1, amhdr->maxKeys, value)) != AME_OK){
 					printf("Btr_recSplit failed: writing %d th value of current leaf node to new one\n", 1);
 					return err;
 				}
@@ -1174,7 +1177,7 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 				bhdr_new->duplicate = TRUE;
 
 				/* copy up the values */
-				if ((err = Btr_getKey(pbuf_new2, NODE_LEAF, amhdr->attrLength, 0, amhdr->maxKeys, tempValue)) != AME_OK){
+				if ((err = Btr_getKey(&pbuf_new2, NODE_LEAF, amhdr->attrLength, 0, amhdr->maxKeys, tempValue)) != AME_OK){
 					printf("Btr_recSplit failed: retrieving %d th value of current leaf node\n", 0);
 					return err;
 				}
@@ -1219,20 +1222,20 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 		mid = amhdr->maxKeys / 2; /* if maxKeys = 4 or 5 then mid = 2 */
 
 		/* parent of the current node */
-		if ((err = Btr_getPtr(pbuf, NODE_LEAF, amhdr->attrLength, NODE_PARENT, amhdr->maxKeys, &parent)) != AME_OK){
+		if ((err = Btr_getPtr(&pbuf, NODE_LEAF, amhdr->attrLength, NODE_PARENT, amhdr->maxKeys, &parent)) != AME_OK){
 			printf("Btr_recSplit failed: retrieving the parent ptr of an leaf node\n");
 			return err;
 		}
 
 		/* determine where the new key is supposed to be at */
-		if ((err = Btr_getKey(pbuf, NODE_LEAF, amhdr->attrLength, mid, amhdr->maxKeys, tempValue)) != AME_OK){
+		if ((err = Btr_getKey(&pbuf, NODE_LEAF, amhdr->attrLength, mid, amhdr->maxKeys, tempValue)) != AME_OK){
 			printf("Btr_recSplit failed: retrieving the middle key of an leaf node\n");
 			return err;
 		}
 		new = Btr_valComp(value, tempValue, amhdr->attrType, amhdr->attrLength);
 
 		/* assign a new node */
-		if ((err = Btr_assignNode(ait[AM_fd].pfd, NODE_LEAF, amhdr->attrLength, amhdr->maxKeys, &newNode, pbuf_new, parent)) != AME_OK){
+		if ((err = Btr_assignNode(ait[AM_fd].pfd, NODE_LEAF, amhdr->attrLength, amhdr->maxKeys, &newNode, &pbuf_new, parent)) != AME_OK){
 			printf("Btr_recSplit failed: assigning a new leaf node\n");
 			return err;
 		}
@@ -1242,17 +1245,17 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 		/* right neighbor of the current leaf node */
 
 		adr.recnum = NODE_NULLPTR;
-		if ((err = Btr_setPtr(pbuf_new, NODE_LEAF, amhdr->attrLength, LEAFIDX_PREV, amhdr->maxKeys, &adr)) != AME_OK){
+		if ((err = Btr_setPtr(&pbuf_new, NODE_LEAF, amhdr->attrLength, LEAFIDX_PREV, amhdr->maxKeys, &adr)) != AME_OK){
 			printf("Btr_recSplit failed: setting PREV ptr of new node\n");
 			return err;
 		}
 
-		if ((err = Btr_getPtr(pbuf, NODE_LEAF, amhdr->attrLength, LEAFIDX_NEXT, amhdr->maxKeys, &tempRid_nbr)) != AME_OK){
+		if ((err = Btr_getPtr(&pbuf, NODE_LEAF, amhdr->attrLength, LEAFIDX_NEXT, amhdr->maxKeys, &tempRid_nbr)) != AME_OK){
 			printf("Btr_recSplit failed: retrieving NEXT ptr of a leaf node\n");
 			return err;
 		}
 
-		if ((err = Btr_setPtr(pbuf_new, NODE_LEAF, amhdr->attrLength, LEAFIDX_NEXT, amhdr->maxKeys, &tempRid_nbr)) != AME_OK){
+		if ((err = Btr_setPtr(&pbuf_new, NODE_LEAF, amhdr->attrLength, LEAFIDX_NEXT, amhdr->maxKeys, &tempRid_nbr)) != AME_OK){
 			printf("Btr_recSplit failed: setting NEXT ptr of new node\n");
 			return err;
 		}
@@ -1260,7 +1263,7 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 		tempRid_new.pagenum = newNode;
 		tempRid_new.recnum = NODE_NULLPTR;
 
-		if ((err = Btr_setPtr(pbuf, NODE_LEAF, amhdr->attrLength, LEAFIDX_NEXT, amhdr->maxKeys, &tempRid_new)) != AME_OK){
+		if ((err = Btr_setPtr(&pbuf, NODE_LEAF, amhdr->attrLength, LEAFIDX_NEXT, amhdr->maxKeys, &tempRid_new)) != AME_OK){
 			printf("Btr_recSplit failed: setting NEXT ptr of new leaf node\n");
 			return err;
 		}
@@ -1271,7 +1274,7 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 				return err;
 			}
 
-			if ((err = Btr_setPtr(pbuf_nbr, NODE_LEAF, amhdr->attrLength, LEAFIDX_PREV, amhdr->maxKeys, &tempRid_new)) != AME_OK){
+			if ((err = Btr_setPtr(&pbuf_nbr, NODE_LEAF, amhdr->attrLength, LEAFIDX_PREV, amhdr->maxKeys, &tempRid_new)) != AME_OK){
 				printf("Btr_recSplit failed: setting PREV ptr of neighboring leaf node\n");
 				return err;
 			}
@@ -1281,28 +1284,28 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 		rid_empty.pagenum = NODE_NULLPTR;
 		rid_empty.recnum = NODE_NULLPTR;
 		for (i = mid; i < entries; i++){
-			if ((err = Btr_getPtr(pbuf, NODE_LEAF, amhdr->attrLength, i, amhdr->maxKeys, &tempRid)) != AME_OK){
+			if ((err = Btr_getPtr(&pbuf, NODE_LEAF, amhdr->attrLength, i, amhdr->maxKeys, &tempRid)) != AME_OK){
 				printf("Btr_recSplit failed: retrieving %d th ptr of current leaf node\n", i);
 				return err;
 			}
-			if ((err = Btr_getKey(pbuf, NODE_LEAF, amhdr->attrLength, i, amhdr->maxKeys, tempValue)) != AME_OK){
+			if ((err = Btr_getKey(&pbuf, NODE_LEAF, amhdr->attrLength, i, amhdr->maxKeys, tempValue)) != AME_OK){
 				printf("Btr_recSplit failed: retrieving %d th value of current leaf node\n", i);
 				return err;
 			}
-			if ((err = Btr_setPtr(pbuf_new, NODE_LEAF, amhdr->attrLength, i-mid, amhdr->maxKeys, &tempRid)) != AME_OK){
+			if ((err = Btr_setPtr(&pbuf_new, NODE_LEAF, amhdr->attrLength, i-mid, amhdr->maxKeys, &tempRid)) != AME_OK){
 				printf("Btr_recSplit failed: writing %d th ptr of current leaf node to new one\n", i);
 				return err;
 			}
-			if ((err = Btr_setKey(pbuf_new, NODE_LEAF, amhdr->attrLength, i-mid, amhdr->maxKeys, tempValue)) != AME_OK){
+			if ((err = Btr_setKey(&pbuf_new, NODE_LEAF, amhdr->attrLength, i-mid, amhdr->maxKeys, tempValue)) != AME_OK){
 				printf("Btr_recSplit failed: writing %d th value of current leaf node to new one\n", i);
 				return err;
 			}
 
-			if ((err = Btr_setPtr(pbuf, NODE_LEAF, amhdr->attrLength, i, amhdr->maxKeys, &rid_empty)) != AME_OK){
+			if ((err = Btr_setPtr(&pbuf, NODE_LEAF, amhdr->attrLength, i, amhdr->maxKeys, &rid_empty)) != AME_OK){
 				printf("Btr_recSplit failed: emptying %d th ptr of current leaf node\n", i);
 				return err;
 			}
-			if ((err = Btr_setKey(pbuf, NODE_LEAF, amhdr->attrLength, i, amhdr->maxKeys, value_empty)) != AME_OK){
+			if ((err = Btr_setKey(&pbuf, NODE_LEAF, amhdr->attrLength, i, amhdr->maxKeys, value_empty)) != AME_OK){
 				printf("Btr_recSplit failed: emptying %d th value of current leaf node\n", i);
 				return err;
 			}
@@ -1327,7 +1330,7 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 
 		/* copying up the mid value, with new node's ptr */
 		tempRid_new.recnum = NODE_INTNULL;
-		if ((err = Btr_getKey(pbuf_new, NODE_LEAF, amhdr->attrLength, 0, amhdr->maxKeys, tempValue)) != AME_OK){
+		if ((err = Btr_getKey(&pbuf_new, NODE_LEAF, amhdr->attrLength, 0, amhdr->maxKeys, tempValue)) != AME_OK){
 			printf("Btr_recSplit failed: retrieving mid value of current leaf node\n");
 			return err;
 		}
@@ -1363,20 +1366,20 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 			mid = amhdr->maxKeys / 2; /* if maxKeys = 4 or 5 then mid = 2 */
 
 			/* parent of the current node */
-			if ((err = Btr_getPtr(pbuf, NODE_INT, amhdr->attrLength, NODE_PARENT, amhdr->maxKeys, &parent)) != AME_OK){
+			if ((err = Btr_getPtr(&pbuf, NODE_INT, amhdr->attrLength, NODE_PARENT, amhdr->maxKeys, &parent)) != AME_OK){
 				printf("Btr_recSplit failed: retrieving the parent ptr of an internal node\n");
 				return err;
 			}
 
 			/* determine where the new key is supposed to be at */
-			if ((err = Btr_getKey(pbuf, NODE_INT, amhdr->attrLength, mid, amhdr->maxKeys, tempValue)) != AME_OK){
+			if ((err = Btr_getKey(&pbuf, NODE_INT, amhdr->attrLength, mid, amhdr->maxKeys, tempValue)) != AME_OK){
 				printf("Btr_recSplit failed: retrieving the middle key of an internal node\n");
 				return err;
 			}
 			new = Btr_valComp(value, tempValue, amhdr->attrType, amhdr->attrLength);
 
 			/* assign a new node */
-			if ((err = Btr_assignNode(ait[AM_fd].pfd, NODE_INT, amhdr->attrLength, amhdr->maxKeys, &newNode, pbuf_new, parent)) != AME_OK){
+			if ((err = Btr_assignNode(ait[AM_fd].pfd, NODE_INT, amhdr->attrLength, amhdr->maxKeys, &newNode, &pbuf_new, parent)) != AME_OK){
 				printf("Btr_recSplit failed: assigning a new internal node\n");
 				return err;
 			}
@@ -1389,27 +1392,27 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 
 			/* if there is no parent node (current node is root), create new root and update */
 			if (parent.pagenum == NODE_NULLPTR){
-				if ((err = Btr_assignNode(ait[AM_fd].pfd, NODE_INT, amhdr->attrLength, amhdr->maxKeys, &newRoot, pbuf_nbr, parent)) != AME_OK){
+				if ((err = Btr_assignNode(ait[AM_fd].pfd, NODE_INT, amhdr->attrLength, amhdr->maxKeys, &newRoot, &pbuf_nbr, parent)) != AME_OK){
 					printf("Btr_recSplit failed(internal): assigning a new root node\n");
 					return err;
 				}
 				/* updating the pointers to the new root node */
 				amhdr->root.pagenum = newRoot;
 				parent.pagenum = newRoot;
-				if ((err = Btr_setPtr(pbuf, NODE_INT, amhdr->attrLength, NODE_PARENT, amhdr->maxKeys, &parent)) != AME_OK){
+				if ((err = Btr_setPtr(&pbuf, NODE_INT, amhdr->attrLength, NODE_PARENT, amhdr->maxKeys, &parent)) != AME_OK){
 					printf("Btr_recSplit failed: updating the current internal node's parent information after assigning a new root node\n");
 					return err;
 				}
-				if ((err = Btr_setPtr(pbuf_new, NODE_INT, amhdr->attrLength, NODE_PARENT, amhdr->maxKeys, &parent)) != AME_OK){
+				if ((err = Btr_setPtr(&pbuf_new, NODE_INT, amhdr->attrLength, NODE_PARENT, amhdr->maxKeys, &parent)) != AME_OK){
 					printf("Btr_recSplit failed: updating the new internal node's parent information after assigning a new root node\n");
 					return err;
 				}
 				/* updating the pointers from the root to the child nodes */
-				if ((err = Btr_setPtr(pbuf_nbr, NODE_ROOT, amhdr->attrLength, 0, amhdr->maxKeys, &adr)) != AME_OK){
+				if ((err = Btr_setPtr(&pbuf_nbr, NODE_ROOT, amhdr->attrLength, 0, amhdr->maxKeys, &adr)) != AME_OK){
 					printf("Btr_recSplit failed: updating the current internal node's parent information after assigning a new root node\n");
 					return err;
 				}
-				if ((err = Btr_setPtr(pbuf_nbr, NODE_ROOT, amhdr->attrLength, 1, amhdr->maxKeys, &tempRid_new)) != AME_OK){
+				if ((err = Btr_setPtr(&pbuf_nbr, NODE_ROOT, amhdr->attrLength, 1, amhdr->maxKeys, &tempRid_new)) != AME_OK){
 					printf("Btr_recSplit failed: updating the new internal node's parent information after assigning a new root node\n");
 					return err;
 				}
@@ -1421,44 +1424,44 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 			rid_empty.pagenum = NODE_NULLPTR;
 			rid_empty.recnum = NODE_NULLPTR;
 			for (i = mid; i < entries; i++){
-				if ((err = Btr_getPtr(pbuf, NODE_INT, amhdr->attrLength, i+1, amhdr->maxKeys, &tempRid)) != AME_OK){
+				if ((err = Btr_getPtr(&pbuf, NODE_INT, amhdr->attrLength, i+1, amhdr->maxKeys, &tempRid)) != AME_OK){
 					printf("Btr_recSplit failed: retrieving %d th ptr of current internal node\n", i+1);
 					return err;
 				}
-				if ((err = Btr_getKey(pbuf, NODE_INT, amhdr->attrLength, i, amhdr->maxKeys, tempValue)) != AME_OK){
+				if ((err = Btr_getKey(&pbuf, NODE_INT, amhdr->attrLength, i, amhdr->maxKeys, tempValue)) != AME_OK){
 					printf("Btr_recSplit failed: retrieving %d th value of current internal node\n", i);
 					return err;
 				}
-				if ((err = Btr_setPtr(pbuf_new, NODE_INT, amhdr->attrLength, (i-mid+1), amhdr->maxKeys, &tempRid)) != AME_OK){
+				if ((err = Btr_setPtr(&pbuf_new, NODE_INT, amhdr->attrLength, (i-mid+1), amhdr->maxKeys, &tempRid)) != AME_OK){
 					printf("Btr_recSplit failed: writing %d th ptr of current internal node to new one\n", i+1);
 					return err;
 				}
-				if ((err = Btr_setKey(pbuf_new, NODE_INT, amhdr->attrLength, i-mid, amhdr->maxKeys, tempValue)) != AME_OK){
+				if ((err = Btr_setKey(&pbuf_new, NODE_INT, amhdr->attrLength, i-mid, amhdr->maxKeys, tempValue)) != AME_OK){
 					printf("Btr_recSplit failed: writing %d th value of current internal node to new one\n", i);
 					return err;
 				}
 
-				if ((err = Btr_setPtr(pbuf, NODE_INT, amhdr->attrLength, i+1, amhdr->maxKeys, &rid_empty)) != AME_OK){
+				if ((err = Btr_setPtr(&pbuf, NODE_INT, amhdr->attrLength, i+1, amhdr->maxKeys, &rid_empty)) != AME_OK){
 					printf("Btr_recSplit failed: emptying %d th ptr of current internal node\n", i+1);
 					return err;
 				}
-				if ((err = Btr_setKey(pbuf, NODE_INT, amhdr->attrLength, i, amhdr->maxKeys, value_empty)) != AME_OK){
+				if ((err = Btr_setKey(&pbuf, NODE_INT, amhdr->attrLength, i, amhdr->maxKeys, value_empty)) != AME_OK){
 					printf("Btr_recSplit failed: emptying %d th value of current internal node\n", i);
 					return err;
 				}
 				bhdr->entries--;
 				bhdr_new->entries++;
 			}
-			if ((err = Btr_getPtr(pbuf, NODE_INT, amhdr->attrLength, mid, amhdr->maxKeys, &tempRid)) != AME_OK){
+			if ((err = Btr_getPtr(&pbuf, NODE_INT, amhdr->attrLength, mid, amhdr->maxKeys, &tempRid)) != AME_OK){
 				printf("Btr_recSplit failed: retrieving %d th ptr of current internal node\n", mid);
 				return err;
 			}
-			if ((err = Btr_setPtr(pbuf_new, NODE_INT, amhdr->attrLength, 0, amhdr->maxKeys, &tempRid)) != AME_OK){
+			if ((err = Btr_setPtr(&pbuf_new, NODE_INT, amhdr->attrLength, 0, amhdr->maxKeys, &tempRid)) != AME_OK){
 				printf("Btr_recSplit failed: writing %d th ptr of current internal node to new one\n", 0);
 				return err;
 			}
 			/* will not work if mid = 0(amhdr->maxKeys = 1)... */
-			if ((err = Btr_setKey(pbuf, NODE_INT, amhdr->attrLength, mid-1, amhdr->maxKeys, value_empty)) != AME_OK){
+			if ((err = Btr_setKey(&pbuf, NODE_INT, amhdr->attrLength, mid-1, amhdr->maxKeys, value_empty)) != AME_OK){
 				printf("Btr_recSplit failed: emptying %d th value of current internal node\n", mid-1);
 				return err;
 			}
@@ -1482,7 +1485,7 @@ int Btr_recSplit(int AM_fd, char * value, RECID recId, RECID adr, bool_t duplica
 
 			/* copying up the mid value, with new node's ptr */
 			tempRid_new.recnum = NODE_INTNULL;
-			if ((err = Btr_getKey(pbuf_new, NODE_INT, amhdr->attrLength, 0, amhdr->maxKeys, tempValue)) != AME_OK){
+			if ((err = Btr_getKey(&pbuf_new, NODE_INT, amhdr->attrLength, 0, amhdr->maxKeys, tempValue)) != AME_OK){
 				printf("Btr_recSplit failed: retrieving mid value of current internal node\n");
 				return err;
 			}
@@ -1555,7 +1558,7 @@ int Btr_recInsert(int AM_fd, char * value, RECID recId, RECID adr){
 		} else {
 			/* looking for a place to fit */
 			for (i = 0; i < entries; i++){
-				if ((err = Btr_getKey(pbuf, NODE_LEAF, amhdr->attrLength, i, amhdr->maxKeys, tempValue)) != AME_OK){
+				if ((err = Btr_getKey(&pbuf, NODE_LEAF, amhdr->attrLength, i, amhdr->maxKeys, tempValue)) != AME_OK){
 					printf("Btr_recInsert failed(looking for fitting place): retrieving %d th value of current leaf node\n", i);
 					return err;
 				}
@@ -1565,7 +1568,7 @@ int Btr_recInsert(int AM_fd, char * value, RECID recId, RECID adr){
 					break;
 				} else if (res == BTR_EQ) {
 					/* if recId is the same, raise error */
-					if ((err = Btr_getPtr(pbuf, NODE_LEAF, amhdr->attrLength, i, amhdr->maxKeys, &tempRid)) != AME_OK){
+					if ((err = Btr_getPtr(&pbuf, NODE_LEAF, amhdr->attrLength, i, amhdr->maxKeys, &tempRid)) != AME_OK){
 						printf("Btr_recInsert failed(looking for fitting place): checking duplciate record ID \n");
 						return err;
 					}
@@ -1590,13 +1593,13 @@ int Btr_recInsert(int AM_fd, char * value, RECID recId, RECID adr){
 					/* current node is for duplicate values but 'value' is bigger */
 					if (bhdr->duplicate == TRUE){
 						/* find current leaf node's NEXT node */
-						if ((err = Btr_getPtr(pbuf, NODE_LEAF, amhdr->attrLength, LEAFIDX_NEXT, amhdr->maxKeys, &tempRid_nbr)) != AME_OK){
+						if ((err = Btr_getPtr(&pbuf, NODE_LEAF, amhdr->attrLength, LEAFIDX_NEXT, amhdr->maxKeys, &tempRid_nbr)) != AME_OK){
 							printf("Btr_recInsert failed: obtaining NEXT ptr of current leaf node\n");
 							return err;
 						}
 
 						/* assign a new node with this value inserted */
-						if ((err = Btr_getPtr(pbuf, NODE_LEAF, amhdr->attrLength, NODE_PARENT, amhdr->maxKeys, &tempRid_par)) != AME_OK){
+						if ((err = Btr_getPtr(&pbuf, NODE_LEAF, amhdr->attrLength, NODE_PARENT, amhdr->maxKeys, &tempRid_par)) != AME_OK){
 							printf("Btr_recInsert failed: obtaining PARENT ptr of current leaf node\n");
 							return err;
 						}
@@ -1617,12 +1620,12 @@ int Btr_recInsert(int AM_fd, char * value, RECID recId, RECID adr){
 
 						/* adjust links between leaf nodes */
 						adr.recnum = NODE_NULLPTR;
-						if ((err = Btr_setPtr(pbuf_new, NODE_LEAF, amhdr->attrLength, LEAFIDX_PREV, amhdr->maxKeys, &adr)) != AME_OK){
+						if ((err = Btr_setPtr(&pbuf_new, NODE_LEAF, amhdr->attrLength, LEAFIDX_PREV, amhdr->maxKeys, &adr)) != AME_OK){
 							printf("Btr_recInsert failed: setting PREV ptr of new node\n");
 							return err;
 						}
 
-						if ((err = Btr_setPtr(pbuf_new, NODE_LEAF, amhdr->attrLength, LEAFIDX_NEXT, amhdr->maxKeys, &tempRid_nbr)) != AME_OK){
+						if ((err = Btr_setPtr(&pbuf_new, NODE_LEAF, amhdr->attrLength, LEAFIDX_NEXT, amhdr->maxKeys, &tempRid_nbr)) != AME_OK){
 							printf("Btr_recSplit failed: setting NEXT ptr of new node\n");
 							return err;
 						}
@@ -1630,7 +1633,7 @@ int Btr_recInsert(int AM_fd, char * value, RECID recId, RECID adr){
 						tempRid_new.pagenum = newNode;
 						tempRid_new.recnum = NODE_NULLPTR;
 
-						if ((err = Btr_setPtr(pbuf, NODE_LEAF, amhdr->attrLength, LEAFIDX_NEXT, amhdr->maxKeys, &tempRid_new)) != AME_OK){
+						if ((err = Btr_setPtr(&pbuf, NODE_LEAF, amhdr->attrLength, LEAFIDX_NEXT, amhdr->maxKeys, &tempRid_new)) != AME_OK){
 							printf("Btr_recSplit failed: setting NEXT ptr of new leaf node\n");
 							return err;
 						}
@@ -1641,7 +1644,7 @@ int Btr_recInsert(int AM_fd, char * value, RECID recId, RECID adr){
 								return err;
 							}
 
-							if ((err = Btr_setPtr(pbuf_nbr, NODE_LEAF, amhdr->attrLength, LEAFIDX_PREV, amhdr->maxKeys, &tempRid_new)) != AME_OK){
+							if ((err = Btr_setPtr(&pbuf_nbr, NODE_LEAF, amhdr->attrLength, LEAFIDX_PREV, amhdr->maxKeys, &tempRid_new)) != AME_OK){
 								printf("Btr_recSplit failed: setting PREV ptr of neighboring leaf node\n");
 								return err;
 							}
@@ -1676,19 +1679,19 @@ int Btr_recInsert(int AM_fd, char * value, RECID recId, RECID adr){
 					   copy from (entries - (j+1)) th entry to (entries - j) th entry
 					   j = 0 to (entries - i - 1) : (entries - 1)th to (entries - 0), ..., i th to i+1 th
 					*/
-					if ((err = Btr_getPtr(pbuf, NODE_LEAF, amhdr->attrLength, entries - (j+1), amhdr->maxKeys, &tempRid)) != AME_OK){
+					if ((err = Btr_getPtr(&pbuf, NODE_LEAF, amhdr->attrLength, entries - (j+1), amhdr->maxKeys, &tempRid)) != AME_OK){
 						printf("Btr_recInsert failed: retrieving %d th ptr of current leaf node\n", entries - (j+1));
 						return err;
 					}
-					if ((err = Btr_getKey(pbuf, NODE_LEAF, amhdr->attrLength, entries - (j+1), amhdr->maxKeys, tempValue)) != AME_OK){
+					if ((err = Btr_getKey(&pbuf, NODE_LEAF, amhdr->attrLength, entries - (j+1), amhdr->maxKeys, tempValue)) != AME_OK){
 						printf("Btr_recInsert failed: retrieving %d th value of current leaf node\n", entries - (j+1));
 						return err;
 					}
-					if ((err = Btr_setPtr(pbuf, NODE_LEAF, amhdr->attrLength, entries - j, amhdr->maxKeys, &tempRid)) != AME_OK){
+					if ((err = Btr_setPtr(&pbuf, NODE_LEAF, amhdr->attrLength, entries - j, amhdr->maxKeys, &tempRid)) != AME_OK){
 						printf("Btr_recInsert failed: moving %d th ptr of current leaf node right\n", entries - (j+1));
 						return err;
 					}
-					if ((err = Btr_setKey(pbuf, NODE_LEAF, amhdr->attrLength, entries - j, amhdr->maxKeys, tempValue)) != AME_OK){
+					if ((err = Btr_setKey(&pbuf, NODE_LEAF, amhdr->attrLength, entries - j, amhdr->maxKeys, tempValue)) != AME_OK){
 						printf("Btr_recInsert failed: moving %d th value of current leaf node right\n", entries - (j+1));
 						return err;
 					}
@@ -1696,11 +1699,11 @@ int Btr_recInsert(int AM_fd, char * value, RECID recId, RECID adr){
 			}
 
 			/* inserting value, with determined 'i' value */
-			if ((err = Btr_setPtr(pbuf, NODE_LEAF, amhdr->attrLength, i, amhdr->maxKeys, &recId)) != AME_OK){
+			if ((err = Btr_setPtr(&pbuf, NODE_LEAF, amhdr->attrLength, i, amhdr->maxKeys, &recId)) != AME_OK){
 				printf("Btr_recInsert failed: inserting new ptr at %d th entry\n", i);
 				return err;
 			}
-			if ((err = Btr_setKey(pbuf, NODE_LEAF, amhdr->attrLength, i, amhdr->maxKeys, value)) != AME_OK){
+			if ((err = Btr_setKey(&pbuf, NODE_LEAF, amhdr->attrLength, i, amhdr->maxKeys, value)) != AME_OK){
 				printf("Btr_recInsert failed: inserting new key at %d th entry\n", i);
 				return err;
 			}
@@ -1729,11 +1732,11 @@ int Btr_recInsert(int AM_fd, char * value, RECID recId, RECID adr){
 			printf("zero entry 1\n");
 			/* fill the entry with this key, go to the right child */
 			/*
-			if ((err = Btr_setPtr(pbuf, NODE_INT, amhdr->attrLength, 0, amhdr->maxKeys, &tempRid)) != AME_OK){
+			if ((err = Btr_setPtr(&pbuf, NODE_INT, amhdr->attrLength, 0, amhdr->maxKeys, &tempRid)) != AME_OK){
 				printf("Btr_recInsert failed: moving %d th ptr of current internal node right\n", entries - j);
 				return err;
 			} */
-			if ((err = Btr_setKey(pbuf, NODE_INT, amhdr->attrLength, 0, amhdr->maxKeys, value)) != AME_OK){
+			if ((err = Btr_setKey(&pbuf, NODE_INT, amhdr->attrLength, 0, amhdr->maxKeys, value)) != AME_OK){
 				printf("Btr_recInsert failed: filling in an empty node with a key\n");
 				return err;
 			}
@@ -1749,7 +1752,7 @@ int Btr_recInsert(int AM_fd, char * value, RECID recId, RECID adr){
 			*/
 			/* receiving pointer information */
 			printf("adr before: pagenum %d, recnum %d\n", adr.pagenum, adr.recnum);
-			if ((err = Btr_getPtr(pbuf, NODE_INT, amhdr->attrLength, 1, amhdr->maxKeys, &adr)) != AME_OK){
+			if ((err = Btr_getPtr(&pbuf, NODE_INT, amhdr->attrLength, 1, amhdr->maxKeys, &adr)) != AME_OK){
 				printf("Btr_recInsert failed: Btr_getPtr of right child at an empty internal node\n");
 				return err;
 			}
@@ -1760,7 +1763,7 @@ int Btr_recInsert(int AM_fd, char * value, RECID recId, RECID adr){
 		else {
 			/* looking for a place to fit */
 			for (i = 0; i < entries; i++){
-				if ((err = Btr_getKey(pbuf, NODE_INT, amhdr->attrLength, i, amhdr->maxKeys, tempValue)) != AME_OK){
+				if ((err = Btr_getKey(&pbuf, NODE_INT, amhdr->attrLength, i, amhdr->maxKeys, tempValue)) != AME_OK){
 					printf("Btr_recInsert failed(looking for fitting place): retrieving %d th value of current internal node\n", i);
 					return err;
 				}
@@ -1787,29 +1790,29 @@ int Btr_recInsert(int AM_fd, char * value, RECID recId, RECID adr){
 				/* moving entries that are bigger than 'value', with ptrs on the RIGHT, not left */
 				if (i < entries){
 					for (j = 0; j < entries - i; j++){
-						if ((err = Btr_getPtr(pbuf, NODE_INT, amhdr->attrLength, (entries - j), amhdr->maxKeys, &tempRid)) != AME_OK){
+						if ((err = Btr_getPtr(&pbuf, NODE_INT, amhdr->attrLength, (entries - j), amhdr->maxKeys, &tempRid)) != AME_OK){
 							printf("Btr_recInsert failed: retrieving %d th ptr of current internal node\n", entries - j);
 							return err;
 						}
-						if ((err = Btr_getKey(pbuf, NODE_INT, amhdr->attrLength, (entries - (j+1)), amhdr->maxKeys, tempValue)) != AME_OK){
+						if ((err = Btr_getKey(&pbuf, NODE_INT, amhdr->attrLength, (entries - (j+1)), amhdr->maxKeys, tempValue)) != AME_OK){
 							printf("Btr_recInsert failed: retrieving %d th value of current internal node\n", entries - (j+1));
 							return err;
 						}
-						if ((err = Btr_setPtr(pbuf, NODE_INT, amhdr->attrLength, (entries - j + 1), amhdr->maxKeys, &tempRid)) != AME_OK){
+						if ((err = Btr_setPtr(&pbuf, NODE_INT, amhdr->attrLength, (entries - j + 1), amhdr->maxKeys, &tempRid)) != AME_OK){
 							printf("Btr_recInsert failed: moving %d th ptr of current internal node right\n", entries - j);
 							return err;
 						}
-						if ((err = Btr_setKey(pbuf, NODE_INT, amhdr->attrLength, (entries - j), amhdr->maxKeys, tempValue)) != AME_OK){
+						if ((err = Btr_setKey(&pbuf, NODE_INT, amhdr->attrLength, (entries - j), amhdr->maxKeys, tempValue)) != AME_OK){
 							printf("Btr_recInsert failed: moving %d th value of current internal node right\n", entries - (j+1));
 							return err;
 						}
 					}
 				}
-				if ((err = Btr_setPtr(pbuf, NODE_INT, amhdr->attrLength, (i+1), amhdr->maxKeys, &recId)) != AME_OK){
+				if ((err = Btr_setPtr(&pbuf, NODE_INT, amhdr->attrLength, (i+1), amhdr->maxKeys, &recId)) != AME_OK){
 					printf("Btr_recInsert failed: inserting new ptr(on the right) at %d th entry\n", j);
 					return err;
 				}
-				if ((err = Btr_setKey(pbuf, NODE_INT, amhdr->attrLength, i, amhdr->maxKeys, value)) != AME_OK){
+				if ((err = Btr_setKey(&pbuf, NODE_INT, amhdr->attrLength, i, amhdr->maxKeys, value)) != AME_OK){
 					printf("Btr_recInsert failed: inserting new key at %d th entry\n", j);
 					return err;
 				}
@@ -1819,7 +1822,7 @@ int Btr_recInsert(int AM_fd, char * value, RECID recId, RECID adr){
 			} /* the inserted value is from actual record. proceed to child nodes */
 			else {
 				/* receiving pointer information */
-				if ((err = Btr_getPtr(pbuf, NODE_INT, amhdr->attrLength, i, amhdr->maxKeys, &adr)) != AME_OK){
+				if ((err = Btr_getPtr(&pbuf, NODE_INT, amhdr->attrLength, i, amhdr->maxKeys, &adr)) != AME_OK){
 					printf("Btr_recInsert failed: receiving pointer for a child at a nonempty internal node\n");
 					return err;
 				}
@@ -1887,7 +1890,7 @@ int Btr_recDelete(int AM_fd, char * value, RECID recId, RECID adr){
 		} else {
 			/* looking for the given entry */
 			for (i = 0; i < entries; i++){
-				if ((err = Btr_getKey(pbuf, NODE_LEAF, amhdr->attrLength, i, amhdr->maxKeys, tempValue)) != AME_OK){
+				if ((err = Btr_getKey(&pbuf, NODE_LEAF, amhdr->attrLength, i, amhdr->maxKeys, tempValue)) != AME_OK){
 					printf("Btr_recDelete failed(looking for value): retrieving %d th value of current leaf node\n", i);
 					return err;
 				}
@@ -1899,39 +1902,39 @@ int Btr_recDelete(int AM_fd, char * value, RECID recId, RECID adr){
 				} else if (res == BTR_EQ) {
 					/* check if recId is also the same */
 					/* if recId is different (when not DUPLICATE), raise error */
-					if ((err = Btr_getPtr(pbuf, NODE_LEAF, amhdr->attrLength, i, amhdr->maxKeys, &tempRid)) != AME_OK){
+					if ((err = Btr_getPtr(&pbuf, NODE_LEAF, amhdr->attrLength, i, amhdr->maxKeys, &tempRid)) != AME_OK){
 						printf("Btr_recDelete failed(looking for value): retrieving record ID \n");
 						return err;
 					}
 					if ((tempRid.pagenum == recId.pagenum) && (tempRid.recnum == recId.recnum)){
 						/* delete this entry, pull latter entries one cell left */
 						for (j = i; j < entries; j++){
-							if ((err = Btr_getPtr(pbuf, NODE_LEAF, amhdr->attrLength, (j+1), amhdr->maxKeys, &tempRid)) != AME_OK){
+							if ((err = Btr_getPtr(&pbuf, NODE_LEAF, amhdr->attrLength, (j+1), amhdr->maxKeys, &tempRid)) != AME_OK){
 								printf("Btr_recDelete failed: retrieving %d th ptr of current leaf node\n", (j+1));
 								return err;
 							}
 							if (j < entries - 1){
-								if ((err = Btr_getKey(pbuf, NODE_LEAF, amhdr->attrLength, (j+1), amhdr->maxKeys, tempValue)) != AME_OK){
+								if ((err = Btr_getKey(&pbuf, NODE_LEAF, amhdr->attrLength, (j+1), amhdr->maxKeys, tempValue)) != AME_OK){
 									printf("Btr_recDelete failed: retrieving %d th value of current leaf node\n", (j+1));
 									return err;
 								}
 							}
 
-							if ((err = Btr_setPtr(pbuf, NODE_LEAF, amhdr->attrLength, j, amhdr->maxKeys, &tempRid)) != AME_OK){
+							if ((err = Btr_setPtr(&pbuf, NODE_LEAF, amhdr->attrLength, j, amhdr->maxKeys, &tempRid)) != AME_OK){
 								printf("Btr_recDelete failed: moving %d th ptr of current leaf node left\n", j);
 								return err;
 							}
 							if (j == (entries - 1)){
-								if ((err = Btr_setKey(pbuf, NODE_LEAF, amhdr->attrLength, j, amhdr->maxKeys, value_empty)) != AME_OK){
+								if ((err = Btr_setKey(&pbuf, NODE_LEAF, amhdr->attrLength, j, amhdr->maxKeys, value_empty)) != AME_OK){
 									printf("Btr_recDelete failed: deleting %d th value of current leaf node left\n", j);
 									return err;
 								}
-								if ((err = Btr_setPtr(pbuf, NODE_LEAF, amhdr->attrLength, (j+1), amhdr->maxKeys, &rid_empty)) != AME_OK){
+								if ((err = Btr_setPtr(&pbuf, NODE_LEAF, amhdr->attrLength, (j+1), amhdr->maxKeys, &rid_empty)) != AME_OK){
 									printf("Btr_recDelete failed: deleting %d th ptr of current leaf node left\n", j);
 									return err;
 								}
 							} else {
-								if ((err = Btr_setKey(pbuf, NODE_LEAF, amhdr->attrLength, j, amhdr->maxKeys, tempValue)) != AME_OK){
+								if ((err = Btr_setKey(&pbuf, NODE_LEAF, amhdr->attrLength, j, amhdr->maxKeys, tempValue)) != AME_OK){
 									printf("Btr_recDelete failed: moving %d th value of current leaf node left\n", j);
 									return err;
 								}
@@ -1972,7 +1975,7 @@ int Btr_recDelete(int AM_fd, char * value, RECID recId, RECID adr){
 		} else {
 			/* looking for a place to fit */
 			for (i = 0; i < entries; i++){
-				if ((err = Btr_getKey(pbuf, NODE_INT, amhdr->attrLength, i, amhdr->maxKeys, tempValue)) != AME_OK){
+				if ((err = Btr_getKey(&pbuf, NODE_INT, amhdr->attrLength, i, amhdr->maxKeys, tempValue)) != AME_OK){
 					printf("Btr_recDelete failed(looking for fitting place): retrieving %d th value of current internal node\n", i);
 					return err;
 				}
@@ -1990,7 +1993,7 @@ int Btr_recDelete(int AM_fd, char * value, RECID recId, RECID adr){
 			}
 			/* proceed to child nodes */
 			/* receiving pointer information */
-			if ((err = Btr_getPtr(pbuf, NODE_INT, amhdr->attrLength, i, amhdr->maxKeys, &adr)) != AME_OK){
+			if ((err = Btr_getPtr(&pbuf, NODE_INT, amhdr->attrLength, i, amhdr->maxKeys, &adr)) != AME_OK){
 				printf("Btr_recDelete failed: receiving pointer for a child at a nonempty internal node\n");
 				return err;
 			}
@@ -2040,7 +2043,7 @@ RECID Btr_getFirstValue(int fd, char * record, RECID * nodeAdr){
 
 	while(Btr_isLeaf(pbuf) != TRUE){
 		/* proceed to leftmost child nodes */
-		if ((err = Btr_getPtr(pbuf, NODE_INT, amhdr->attrLength, 0, amhdr->maxKeys, &tempRid)) != AME_OK){
+		if ((err = Btr_getPtr(&pbuf, NODE_INT, amhdr->attrLength, 0, amhdr->maxKeys, &tempRid)) != AME_OK){
 			printf("Btr_getFirstValue failed: receiving pointer to a leftmost child node\n");
 			return res;
 		}
@@ -2056,11 +2059,11 @@ RECID Btr_getFirstValue(int fd, char * record, RECID * nodeAdr){
 			nodeAdr->pagenum = tempRid.pagenum;
 			nodeAdr->recnum = NODE_NULLPTR;
 			/* retrieve the first value and pointer, since it is the smallest and first record */
-			if ((err = Btr_getPtr(pbuf, NODE_LEAF, amhdr->attrLength, 0, amhdr->maxKeys, &tempRid)) != AME_OK){
+			if ((err = Btr_getPtr(&pbuf, NODE_LEAF, amhdr->attrLength, 0, amhdr->maxKeys, &tempRid)) != AME_OK){
 				printf("Btr_getFirstValue failed: receiving pointer of leaf node\n");
 				return res;
 			}
-			if ((err = Btr_getKey(pbuf, NODE_LEAF, amhdr->attrLength, 0, amhdr->maxKeys, record)) != AME_OK){
+			if ((err = Btr_getKey(&pbuf, NODE_LEAF, amhdr->attrLength, 0, amhdr->maxKeys, record)) != AME_OK){
 				printf("Btr_getFirstValue failed: receiving key of leaf node\n");
 				return res;
 			}
@@ -2068,7 +2071,7 @@ RECID Btr_getFirstValue(int fd, char * record, RECID * nodeAdr){
 			return tempRid;
 		} else {
 			/* retrieve pointer to the NEXT leaf node, check validity */
-			if ((err = Btr_getPtr(pbuf, NODE_LEAF, amhdr->attrLength, LEAFIDX_NEXT, amhdr->maxKeys, &tempRid)) != AME_OK){
+			if ((err = Btr_getPtr(&pbuf, NODE_LEAF, amhdr->attrLength, LEAFIDX_NEXT, amhdr->maxKeys, &tempRid)) != AME_OK){
 				printf("Btr_getFirstValue failed: receiving pointer to NEXT leaf node\n");
 				return res;
 			}
@@ -2121,7 +2124,7 @@ RECID Btr_getThisValue(int fd, RECID recId, char * record_in){
 		} else {
 			/* looking for a place to fit */
 			for (i = 0; i < entries; i++){
-				if ((err = Btr_getKey(pbuf, NODE_INT, amhdr->attrLength, i, amhdr->maxKeys, tempValue)) != AME_OK){
+				if ((err = Btr_getKey(&pbuf, NODE_INT, amhdr->attrLength, i, amhdr->maxKeys, tempValue)) != AME_OK){
 					printf("Btr_getThisValue failed(looking for fitting place): retrieving %d th value of current internal node\n", i);
 					return res;
 				}
@@ -2139,7 +2142,7 @@ RECID Btr_getThisValue(int fd, RECID recId, char * record_in){
 			}
 			/* proceed to child nodes */
 			/* receiving pointer information */
-			if ((err = Btr_getPtr(pbuf, NODE_INT, amhdr->attrLength, i, amhdr->maxKeys, &tempRid)) != AME_OK){
+			if ((err = Btr_getPtr(&pbuf, NODE_INT, amhdr->attrLength, i, amhdr->maxKeys, &tempRid)) != AME_OK){
 				printf("Btr_getThisValue failed: receiving pointer for a child node\n");
 				return res;
 			}
@@ -2151,7 +2154,7 @@ RECID Btr_getThisValue(int fd, RECID recId, char * record_in){
 	}
 	/* leaf node found, look for the value */
 	for (i = 0; i < entries; i++){
-		if ((err = Btr_getKey(pbuf, NODE_LEAF, amhdr->attrLength, i, amhdr->maxKeys, tempValue)) != AME_OK){
+		if ((err = Btr_getKey(&pbuf, NODE_LEAF, amhdr->attrLength, i, amhdr->maxKeys, tempValue)) != AME_OK){
 			printf("Btr_getThisValue failed(looking for fitting place): retrieving %d th value of current internal node\n", i);
 			return res;
 		}
@@ -2161,7 +2164,7 @@ RECID Btr_getThisValue(int fd, RECID recId, char * record_in){
 			break;
 		} else if (result == BTR_EQ) {
 			/* check if recId also coincides */
-			if ((err = Btr_getPtr(pbuf, NODE_LEAF, amhdr->attrLength, i, amhdr->maxKeys, &tempRec)) != AME_OK){
+			if ((err = Btr_getPtr(&pbuf, NODE_LEAF, amhdr->attrLength, i, amhdr->maxKeys, &tempRec)) != AME_OK){
 				printf("Btr_getThisValue failed: receiving pointer for a record\n");
 				return res;
 			}
@@ -2209,11 +2212,11 @@ RECID Btr_getNextValue(int fd, char * record_out, RECID * nodeAdr){
 
 	/* another value in the same leaf node */
 	if (tempRid.recnum + 1 < bhdr->entries){
-		if ((err = Btr_getKey(pbuf, NODE_LEAF, amhdr->attrLength, tempRid.recnum + 1, amhdr->maxKeys, record_out)) != AME_OK){
+		if ((err = Btr_getKey(&pbuf, NODE_LEAF, amhdr->attrLength, tempRid.recnum + 1, amhdr->maxKeys, record_out)) != AME_OK){
 			printf("Btr_getNextValue failed: retrieving %d th value of current leaf node\n", tempRid.recnum + 1);
 			return res;
 		}
-		if ((err = Btr_getPtr(pbuf, NODE_LEAF, amhdr->attrLength, tempRid.recnum + 1, amhdr->maxKeys, &tempRec)) != AME_OK){
+		if ((err = Btr_getPtr(&pbuf, NODE_LEAF, amhdr->attrLength, tempRid.recnum + 1, amhdr->maxKeys, &tempRec)) != AME_OK){
 			printf("Btr_getNextValue failed: receiving pointer for a record\n");
 			return res;
 		}
@@ -2224,7 +2227,7 @@ RECID Btr_getNextValue(int fd, char * record_out, RECID * nodeAdr){
 
 	while(TRUE){
 		/* retrieve pointer to the NEXT leaf node, check validity */
-		if ((err = Btr_getPtr(pbuf, NODE_LEAF, amhdr->attrLength, LEAFIDX_NEXT, amhdr->maxKeys, &tempRid)) != AME_OK){
+		if ((err = Btr_getPtr(&pbuf, NODE_LEAF, amhdr->attrLength, LEAFIDX_NEXT, amhdr->maxKeys, &tempRid)) != AME_OK){
 			printf("Btr_getNextValue failed: receiving pointer to NEXT leaf node\n");
 			return res;
 		}
@@ -2245,11 +2248,11 @@ RECID Btr_getNextValue(int fd, char * record_out, RECID * nodeAdr){
 			nodeAdr->pagenum = tempRid.pagenum;
 			nodeAdr->recnum = 0;
 			/* retrieve the first value and pointer, since it is the smallest and first record */
-			if ((err = Btr_getPtr(pbuf, NODE_LEAF, amhdr->attrLength, 0, amhdr->maxKeys, &tempRid)) != AME_OK){
+			if ((err = Btr_getPtr(&pbuf, NODE_LEAF, amhdr->attrLength, 0, amhdr->maxKeys, &tempRid)) != AME_OK){
 				printf("Btr_getNextValue failed: receiving pointer of leaf node\n");
 				return res;
 			}
-			if ((err = Btr_getKey(pbuf, NODE_LEAF, amhdr->attrLength, 0, amhdr->maxKeys, record_out)) != AME_OK){
+			if ((err = Btr_getKey(&pbuf, NODE_LEAF, amhdr->attrLength, 0, amhdr->maxKeys, record_out)) != AME_OK){
 				printf("Btr_getNextValue failed: receiving key of leaf node\n");
 				return res;
 			}
