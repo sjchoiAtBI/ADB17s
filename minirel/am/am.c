@@ -32,7 +32,11 @@
 #define INAME_LEN 1000
 #define ITOA_DECIMAL 10
 
+#define __MUTE__ 0
+
+#if __MUTE__
 #define printf myPrintf
+#endif
 
 void myPrintf(const char *fmt, ...) {
 
