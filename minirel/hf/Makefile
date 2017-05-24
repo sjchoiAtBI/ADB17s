@@ -19,10 +19,10 @@ all: lib${LIB}.a ${LIB}test
 ${LIB}test: ${LIB}test.o lib${LIB}.a
 	$(CC) $(CFLAGS) -o $@ $< ${LIBS}
 
-../pf/libpf.a:
+../pf/libpf.a: ../pf/pf.c
 	cd ../pf && $(MAKE)
 
-../bf/libbf.a:
+../bf/libbf.a: ../bf/bf.c
 	cd ../bf && $(MAKE)
 
 lib${LIB}.a: $(OBJS)

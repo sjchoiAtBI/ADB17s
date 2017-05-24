@@ -1,7 +1,7 @@
 # Makefile for AM layer
 LIB	= am
 INCDIR	= ${MINIREL_HOME}/h
-INCS	=
+INCS	= ../hf/libhf.a ../pf/libpf.a ../bf/libbf.a
 SRCS	= am.c
 TESTS	= amtest.c
 OBJS	= ${SRCS:.c=.o}
@@ -19,14 +19,20 @@ all: lib${LIB}.a ${LIB}test
 ${LIB}test: ${LIB}test.o lib${LIB}.a
 	$(CC) $(CFLAGS) -o $@ $< ${LIBS}
 
-$(LIBS): ../hf/libhf.a
-
 ../hf/libhf.a: ../hf/hf.c
 	cd ../hf && $(MAKE)
+
+../pf/libpf.a: ../pf/pf.c
+	cd ../pf && $(MAKE)
+
+../bf/libbf.a: ../bf/bf.c
+	cd ../bf && $(MAKE)
 
 lib${LIB}.a: $(OBJS)
 	ar cr lib${LIB}.a $(OBJS)
 	ranlib lib${LIB}.a
+
+$(OBJS): ${INCS}
 
 clean:
 	rm -f lib${LIB}.a *.o ${LIB}test *.bak *~
