@@ -1967,6 +1967,9 @@ int Btr_recDelete(int AM_fd, char * value, RECID recId, RECID adr){
 								printf("minus recnum by 1\n");
 								ast[j].current.recnum--;
 								ast[j].currentNode.recnum--;
+
+								if (ast[j].current.recnum < 0) ast[j].current.recnum = 0;
+								if (ast[j].currentNode.recnum < 0) ast[j].currentNode.recnum = 0;
 							}
 						}
 

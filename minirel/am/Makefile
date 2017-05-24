@@ -34,4 +34,4 @@ clean:
 .c.o:; $(CC) $(CFLAGS) -c $< -I. -I$(INCDIR)
 
 run:
-	make clean; make; ./${LIB}test; ./${LIB}test > ${LIB}test.out; diff ${LIB}test.out ${LIB}test.out.orig
+	make clean; make; ./${LIB}test; ./${LIB}test > ${LIB}test.out; #diff ${LIB}test.out ${LIB}test.out.orig
