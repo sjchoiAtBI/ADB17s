@@ -32,7 +32,7 @@
 #define INAME_LEN 1000
 #define ITOA_DECIMAL 10
 
-#define __MUTE__ 0
+#define __MUTE__ 1
 
 #if __MUTE__
 #define printf myPrintf
@@ -1957,6 +1957,19 @@ int Btr_recDelete(int AM_fd, char * value, RECID recId, RECID adr){
 						return err;
 					}
 					if ((tempRid.pagenum == recId.pagenum) && (tempRid.recnum == recId.recnum)){
+						/* If this node is the same as scan.currentNode and recId <= scan.currentNode, scan.currentNode.recnum--. */
+						for (j = 0; j < MAXISCANS; j++) {
+							if (ast[j].valid == FALSE) continue;
+
+							printf("compare recnum %d, %d / %d, %d / %d, %d\n", tempRid.pagenum, tempRid.recnum, ast[j].current.pagenum, ast[j].current.recnum, ast[j].currentNode.pagenum, ast[j].currentNode.recnum);
+
+							if (ast[j].fd == AM_fd && tempRid.pagenum == ast[j].current.pagenum && tempRid.recnum <= ast[j].current.recnum) {
+								printf("minus recnum by 1\n");
+								ast[j].current.recnum--;
+								ast[j].currentNode.recnum--;
+							}
+						}
+
 						/* delete this entry, pull latter entries one cell left */
 						for (j = i; j < entries; j++){
 							if ((err = Btr_getPtr(&pbuf, NODE_LEAF, amhdr->attrLength, (j+1), amhdr->maxKeys, &tempRid)) != AME_OK){
