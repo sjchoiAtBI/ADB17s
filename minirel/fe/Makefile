@@ -43,6 +43,13 @@ $(OBJS): ${INCS}
 clean:
 	rm -f lib${LIB}.a *.o ${LIB}test-ddl ${LIB}test-dml *.bak *~
 
+cleanall:
+	make clean
+	cd ../bf && make clean
+	cd ../pf && make clean
+	cd ../hf && make clean
+	cd ../am && make clean
+
 .c.o:; $(CC) $(CFLAGS) -c $< -I. -I$(INCDIR)
 
 run:
