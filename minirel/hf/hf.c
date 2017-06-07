@@ -11,6 +11,8 @@
 #include "hf.h"
 #include "custom.h"
 
+int HFerrno;
+
 /* HF file table element. */
 typedef struct  HFftab_ele {
     bool_t valid;

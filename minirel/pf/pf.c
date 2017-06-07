@@ -163,20 +163,20 @@ int  PF_DestroyFile	(char *filename) {
 
  	/* Checking whether the file actually exists */
 	file_fd = open(filename, O_RDONLY);
-	if(file_fd == FOPEN_NOFILE){
+	if(file_fd == FOPEN_NOFILE){ printf("pf1\n");
 		return PFE_UNIX;
 	}
 	close(file_fd);
 
 	/* checking whether there is an open file with the same filename */
 	for(i = 0; i < PF_FTAB_SIZE; i++){
-		if ((pft[i].fname != FNAME_INVALID) && (strcmp(pft[i].fname, filename) == SAME_STRING) && (pft[i].valid == TRUE)){
+		if ((pft[i].fname != FNAME_INVALID) && (strcmp(pft[i].fname, filename) == SAME_STRING) && (pft[i].valid == TRUE)){printf("pf2\n");
 			return PFE_FILEOPEN;
 		}
 	}
 
 	/* destroying the file using the system call remove() */
-	if (remove(filename) != REMOVE_SUCCESS){
+	if (remove(filename) != REMOVE_SUCCESS){printf("pf3\n");
 		return PFE_UNIX; /* when remove() fails and an error code is returned */
 	}
 
@@ -201,21 +201,20 @@ int  PF_DestroyFile	(char *filename) {
 	PFE_FTABFULL - when the file table was full and failed to allocate an entry for the specified file
 */
 int  PF_OpenFile	(char *filename) {
-
 	int file_fd, i;
 	int pft_idx;
 	struct stat stat_file;
 
 	/* checking whether there is an open file with the same filename */
-	for(i = 0; i < PF_FTAB_SIZE; i++){
-		if ((pft[i].fname != FNAME_INVALID) && (strcmp(pft[i].fname, filename) == SAME_STRING) && (pft[i].valid == TRUE)){
+	for(i = 0; i < PF_FTAB_SIZE; i++) {
+		if ((pft[i].fname != FNAME_INVALID) && (strcmp(pft[i].fname, filename) == SAME_STRING) && (pft[i].valid == TRUE)) {
 			return PFE_FILEOPEN;
 		}
 	}
 
 	/* Opens the file if exists */
 	file_fd = open(filename, O_RDWR);
-	if (file_fd == FOPEN_NOFILE){
+	if (file_fd == FOPEN_NOFILE) {
 		return PFE_FILENOTOPEN;
 	}
 
@@ -272,20 +271,20 @@ int  PF_CloseFile	(int fd) {
 
 	/* Check if the file was ever opened */
 	if (pft[fd].valid == FALSE){
-		printf("filenotopen");
+		printf("filenotopen\n");
 		return PFE_FILENOTOPEN;
 	}
 
 	/* using BF_FlushBuf() to release all the buffer pages, writing dirty pages */
 	if (BF_FlushBuf(fd) != BFE_OK) {
-		printf("pagefree");
+		printf("pagefree\n");
 		return PFE_PAGEFREE;
 	}
 
 	/* Write the file header back to file if ever changed */
 	if (pft[fd].hdrchanged == TRUE){
 		if (pwrite(pft[fd].unixfd, &pft[fd].hdr, sizeof(PFhdr_str), FILE_BEGINNING)!= sizeof(PFhdr_str)){
-		printf("hdrwrite");
+		printf("hdrwrite\n");
 			return PFE_HDRWRITE;
 		}
 	}

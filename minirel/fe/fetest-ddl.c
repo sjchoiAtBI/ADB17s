@@ -19,8 +19,8 @@
 #define	PROFREL		"prof.pid"
 
 #include "studprofdb-schema.h"
-#define STUD_LOADFILE	"../data.student.sid"
-#define PROF_LOADFILE	"../data.professor.pid"
+#define STUD_LOADFILE	"./data.student.sid"
+#define PROF_LOADFILE	"./data.professor.pid"
 
 extern int relcatFd, attrcatFd;
 
@@ -156,7 +156,7 @@ void load_student()
 
   if (LoadTable(STUDREL, STUD_LOADFILE) != FEE_OK) {
      FE_PrintError("Problem loading the student data file.\n");
-     printf("FEerrno==%d, AMerrno=%d, HFerrno=%d\n",FEerrno,AMerrno,HFerrno);
+     printf("FEerrno==%d, AMerrno=%d, HFerrno=%d\n",FEerrno,AMerrno,HFerrno);exit(-1);
   }
 
   printf("End of loading student from %s ...\n",STUD_LOADFILE);

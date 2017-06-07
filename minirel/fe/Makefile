@@ -1,7 +1,7 @@
 # Makefile for FE layer
 LIB	= fe
 INCDIR	= ${MINIREL_HOME}/h
-INCS	=
+INCS	= ../am/libam.a ../hf/libhf.a ../pf/libpf.a ../bf/libbf.a
 SRCS	= fe.c
 TESTS	= fetest-ddl.c fetest-dml.c
 OBJS	= ${SRCS:.c=.o}
@@ -26,15 +26,24 @@ lib${LIB}.a: $(OBJS)
 	ar cr lib${LIB}.a $(OBJS)
 	ranlib lib${LIB}.a
 
-../am/libam.a:
+../am/libam.a: ../am/am.c
 	cd ../am && $(MAKE)
 
-../hf/libhf.a:
+../hf/libhf.a: ../hf/hf.c
 	cd ../hf && $(MAKE)
+
+../pf/libpf.a: ../pf/pf.c
+	cd ../pf && $(MAKE)
+
+../bf/libbf.a: ../bf/bf.c
+	cd ../bf && $(MAKE)
 
 $(OBJS): ${INCS}
 
 clean:
-	rm -f lib${LIB}.a *.o ${LIB}test *.bak *~
+	rm -f lib${LIB}.a *.o ${LIB}test-ddl ${LIB}test-dml *.bak *~
 
 .c.o:; $(CC) $(CFLAGS) -c $< -I. -I$(INCDIR)
+
+run:
+	rm -fr testdb; make clean; make; ./${LIB}test-ddl; ./${LIB}test-ddl > ${LIB}test-ddl.out; #diff ${LIB}test.out ${LIB}test.out.orig
